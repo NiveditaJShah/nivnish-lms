@@ -90,6 +90,34 @@
 
   <!-- Main container -->
   <main class="max-w-6xl mx-auto p-4" id="appRoot">
+
+    <!-- HOME / LANDING VIEW -->
+    <section id="view-home" class="">
+      <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+        <h1 class="text-3xl font-bold mb-4">Welcome to NivNish Training Hub</h1>
+        <p class="text-gray-600 dark:text-gray-300 mb-6">A simple LMS for quizzes and learning. Choose your entry below:</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="p-6 border rounded-lg bg-indigo-50 dark:bg-gray-700">
+            <h2 class="text-xl font-semibold mb-2">Admin</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Administrators can create quizzes, manage students and view analytics.</p>
+            <button id="btnAdminEntry" class="px-4 py-2 bg-indigo-600 text-white rounded">Admin Login</button>
+          </div>
+
+          <div class="p-6 border rounded-lg bg-green-50 dark:bg-gray-700">
+            <h2 class="text-xl font-semibold mb-2">Students</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Students can login, register, take quizzes and view certificates.</p>
+            <div class="flex justify-center gap-3">
+              <button id="btnStudentLogin" class="px-4 py-2 bg-green-600 text-white rounded">Student Login</button>
+              <button id="btnStudentRegister" class="px-4 py-2 bg-white text-green-700 border border-green-600 rounded">Register</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 text-sm text-gray-500">Already have an account? Use the login button. New users can register.</div>
+      </div>
+    </section>
+
     <!-- AUTH VIEW -->
     <section id="view-auth" class="hidden">
       <div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow p-6">
