@@ -39,6 +39,13 @@
   <!-- App styles -->
   <link rel="stylesheet" href="styles.css" />
 
+  <!-- Debug styles to ensure visibility -->
+  <style>
+    .hidden { display: none !important; }
+    section { display: block; }
+    main > section { min-height: 50vh; }
+  </style>
+
   <meta name="description" content="NivNish Training Hub - Pure For Sure LMS" />
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen">
@@ -48,9 +55,11 @@
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center gap-3">
           <!-- Logo with fallback to inline SVG -->
-          <div class="w-12 h-12 flex items-center justify-center">
-            <img id="brandLogo" src="NivNish_Training_Logo.svg" alt="NivNish Logo" class="w-12 h-12 object-contain"
-                onerror="this.outerHTML = '<svg width=48 height=48 viewBox=0 0 48 48 xmlns=\'http://www.w3.org/2000/svg\' class=\'rounded-full bg-indigo-600\'><text x=\'50%\' y=\'50%\' fill=\'white\' font-size=\'10\' font-family=\'Plus Jakarta Sans\' dominant-baseline=\'middle\' text-anchor=\'middle\'>NN</text></svg>'" />
+          <div class="w-12 h-12 flex items-center justify-center rounded-full bg-indigo-600">
+            <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" class="rounded-full">
+              <circle cx="24" cy="24" r="24" fill="#4f46e5"/>
+              <text x="24" y="26" fill="white" font-size="16" font-family="Plus Jakarta Sans" font-weight="700" dominant-baseline="middle" text-anchor="middle">NN</text>
+            </svg>
           </div>
 
           <div>
@@ -59,19 +68,19 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-3">
-          <button id="themeToggle" aria-label="Toggle theme"
-                  class="p-2 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
-            <i id="themeIcon" class="fas fa-moon"></i>
+        <div class="flex items-center gap-2">
+          <button type="button" id="themeToggle" aria-label="Toggle theme" title="Toggle dark/light mode"
+                  class="p-2 rounded-md bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-yellow-300 hover:bg-gray-300 dark:hover:bg-gray-500 transition cursor-pointer">
+            <i id="themeIcon" class="fas fa-moon text-lg"></i>
           </button>
 
-          <nav class="hidden md:flex items-center gap-2">
-            <button data-nav="auth" class="nav-btn px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">Login / Register</button>
-            <button data-nav="dashboard" class="nav-btn px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">Dashboard</button>
-            <button data-nav="admin" class="nav-btn px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">Admin</button>
+          <nav class="flex items-center gap-1">
+            <button type="button" data-nav="auth" class="nav-btn px-2 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700">Login</button>
+            <button type="button" data-nav="dashboard" class="nav-btn px-2 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700">Dashboard</button>
+            <button type="button" data-nav="admin" class="nav-btn px-2 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700">Admin</button>
           </nav>
 
-          <button id="mobileNavBtn" class="md:hidden p-2">
+          <button type="button" id="mobileNavBtn" class="md:hidden p-2">
             <i class="fas fa-bars"></i>
           </button>
         </div>
@@ -93,11 +102,11 @@
           <form id="loginForm" class="space-y-4">
             <div>
               <label class="block text-sm">Email</label>
-              <input required type="email" id="loginEmail" class="w-full mt-1 rounded border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
+              <input required type="email" id="loginEmail" class="w-full mt-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
             </div>
             <div>
               <label class="block text-sm">Password</label>
-              <input required type="password" id="loginPassword" class="w-full mt-1 rounded border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
+              <input required type="password" id="loginPassword" class="w-full mt-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
             </div>
             <div class="flex items-center justify-between">
               <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Login</button>
@@ -111,25 +120,25 @@
           <form id="registerForm" class="space-y-4">
             <div>
               <label class="block text-sm">Full name</label>
-              <input required type="text" id="regName" class="w-full mt-1 rounded border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
+              <input required type="text" id="regName" class="w-full mt-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
             </div>
             <div>
               <label class="block text-sm">Email</label>
-              <input required type="email" id="regEmail" class="w-full mt-1 rounded border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
+              <input required type="email" id="regEmail" class="w-full mt-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
             </div>
             <div>
               <label class="block text-sm">Password</label>
-              <input required type="password" id="regPassword" class="w-full mt-1 rounded border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
+              <input required type="password" id="regPassword" class="w-full mt-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
             </div>
             <div>
               <label class="block text-sm">Role</label>
-              <select id="regRole" class="w-full mt-1 rounded border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2">
+              <select id="regRole" class="w-full mt-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2">
                 <option value="student">Student</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
             <div>
-              <button class="px-4 py-2 bg-green-600 text-white rounded">Register</button>
+              <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Register</button>
             </div>
             <div id="registerMessage" class="text-sm text-red-500"></div>
           </form>
@@ -144,7 +153,7 @@
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-semibold">Your Quizzes</h2>
             <div class="flex items-center gap-2">
-              <input id="quizSearch" placeholder="Search quizzes..." class="p-2 rounded border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900" />
+              <input id="quizSearch" placeholder="Search quizzes..." class="p-2 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900" />
               <button id="btnMyHistory" class="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded">History</button>
             </div>
           </div>
@@ -166,7 +175,7 @@
           <div>
             <h3 class="font-semibold mb-2">Course Discussion</h3>
             <div id="discussionList" class="space-y-2 max-h-52 overflow-auto mb-3"></div>
-            <textarea id="discussionInput" placeholder="Ask a question or start a discussion..." class="w-full p-2 rounded border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"></textarea>
+            <textarea id="discussionInput" placeholder="Ask a question or start a discussion..." class="w-full p-2 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"></textarea>
             <div class="flex justify-end mt-2">
               <button id="postDiscussion" class="px-3 py-2 bg-indigo-600 text-white rounded">Post</button>
             </div>
