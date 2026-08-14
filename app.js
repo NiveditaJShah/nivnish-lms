@@ -50,31 +50,50 @@ function switchAuthTab(tab) {
 function toggleTheme() {
   const html = document.documentElement;
   const isDark = html.classList.contains('dark');
+  const icon = document.getElementById('themeIcon');
+  
   if (isDark) {
     html.classList.remove('dark');
     localStorage.setItem('theme', 'light');
-    document.getElementById('themeIcon').className = 'fas fa-moon text-lg';
+    if (icon) {
+      icon.classList.remove('fa-sun');
+      icon.classList.add('fa-moon');
+    }
   } else {
     html.classList.add('dark');
     localStorage.setItem('theme', 'dark');
-    document.getElementById('themeIcon').className = 'fas fa-sun text-lg';
+    if (icon) {
+      icon.classList.remove('fa-moon');
+      icon.classList.add('fa-sun');
+    }
   }
 }
 
 function initializeTheme() {
   const theme = localStorage.getItem('theme') || 'light';
+  const icon = document.getElementById('themeIcon');
+  
   if (theme === 'dark') {
     document.documentElement.classList.add('dark');
-    document.getElementById('themeIcon').className = 'fas fa-sun text-lg';
+    if (icon) {
+      icon.classList.remove('fa-moon');
+      icon.classList.add('fa-sun');
+    }
   } else {
-    document.getElementById('themeIcon').className = 'fas fa-moon text-lg';
+    document.documentElement.classList.remove('dark');
+    if (icon) {
+      icon.classList.remove('fa-sun');
+      icon.classList.add('fa-moon');
+    }
   }
+  
   const themeToggleBtn = document.getElementById('themeToggle');
   if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', toggleTheme);
+    // Remove old listeners to prevent duplicate triggers, then add clean listener
+    themeToggleBtn.replaceWith(themeToggleBtn.cloneNode(true));
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
   }
 }
-
 function quickDemoStudent() {
   appState.currentUser = appState.users.find(u => u.email === 'student@demo.com') || {
     id: 'usr_demo', name: 'Demo Student', email: 'student@demo.com', role: 'student'
