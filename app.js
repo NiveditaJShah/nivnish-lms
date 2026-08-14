@@ -56,15 +56,13 @@ function toggleTheme() {
     html.classList.remove('dark');
     localStorage.setItem('theme', 'light');
     if (icon) {
-      icon.classList.remove('fa-sun');
-      icon.classList.add('fa-moon');
+      icon.className = 'fas fa-moon text-lg';
     }
   } else {
     html.classList.add('dark');
     localStorage.setItem('theme', 'dark');
     if (icon) {
-      icon.classList.remove('fa-moon');
-      icon.classList.add('fa-sun');
+      icon.className = 'fas fa-sun text-lg';
     }
   }
 }
@@ -75,17 +73,12 @@ function initializeTheme() {
   
   if (theme === 'dark') {
     document.documentElement.classList.add('dark');
-    if (icon) {
-      icon.classList.remove('fa-moon');
-      icon.classList.add('fa-sun');
-    }
+    if (icon) icon.className = 'fas fa-sun text-lg';
   } else {
     document.documentElement.classList.remove('dark');
-    if (icon) {
-      icon.classList.remove('fa-sun');
-      icon.classList.add('fa-moon');
-    }
+    if (icon) icon.className = 'fas fa-moon text-lg';
   }
+}
   
   const themeToggleBtn = document.getElementById('themeToggle');
   if (themeToggleBtn) {
