@@ -78,13 +78,15 @@ function initializeTheme() {
     document.documentElement.classList.remove('dark');
     if (icon) icon.className = 'fas fa-moon text-lg';
   }
+}
   
   const themeToggleBtn = document.getElementById('themeToggle');
   if (themeToggleBtn) {
+    // Remove old listeners to prevent duplicate triggers, then add clean listener
     themeToggleBtn.replaceWith(themeToggleBtn.cloneNode(true));
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
   }
-}
+
 function quickDemoStudent() {
   appState.currentUser = appState.users.find(u => u.email === 'student@demo.com') || {
     id: 'usr_demo', name: 'Demo Student', email: 'student@demo.com', role: 'student'
