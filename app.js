@@ -85,7 +85,6 @@ function initializeTheme() {
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
   }
 }
-
 function quickDemoStudent() {
   appState.currentUser = appState.users.find(u => u.email === 'student@demo.com') || {
     id: 'usr_demo', name: 'Demo Student', email: 'student@demo.com', role: 'student'
