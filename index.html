@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>NivNish Training Hub — Pure For Sure</title>
+  <title>NivNish Training Hub — Pure For Sure LMS</title>
 
   <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -31,24 +31,24 @@
   <!-- App styles -->
   <link rel="stylesheet" href="styles.css" />
 
-  <meta name="description" content="NivNish Training Hub - Pure For Sure" />
+  <meta name="description" content="NivNish Training Hub - Pure For Sure LMS" />
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen">
   <!-- Header -->
   <header class="bg-white dark:bg-gray-800 shadow sticky top-0 z-30">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
-        <div class="flex items-center gap-4 cursor-pointer" onclick="navigateTo('home')">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('home')">
           <img src="./NivNish_Training_Logo-removebg-preview.png" alt="NivNish Training Hub" class="w-14 h-14 object-contain" />
           <div>
             <span class="text-lg sm:text-xl font-semibold">NivNish Training Hub</span>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Pure For Sure</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">Pure For Sure LMS</div>
           </div>
         </div>
 
         <div class="flex items-center gap-2">
           <button type="button" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle dark/light mode"
-        class="p-2 rounded-md bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-yellow-300 hover:bg-gray-300 dark:hover:bg-gray-500 transition cursor-pointer">
+                  class="p-2 rounded-md bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-yellow-300 hover:bg-gray-300 dark:hover:bg-gray-500 transition cursor-pointer">
             <i id="themeIcon" class="fas fa-moon text-lg"></i>
           </button>
 
@@ -84,7 +84,6 @@
             <p class="text-sm text-gray-600 dark:text-gray-300">Take assigned quizzes, track past scores, and earn verified printable certificates.</p>
             <div class="flex gap-3 pt-1">
               <button onclick="navigateTo('auth')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-semibold">Student Login</button>
-              <button onclick="quickDemoStudent()" class="px-4 py-2 bg-white dark:bg-gray-800 text-green-700 dark:text-green-400 border border-green-600 rounded text-sm font-semibold">Quick Demo</button>
             </div>
           </div>
         </div>
@@ -111,7 +110,6 @@
             </div>
             <div class="flex items-center justify-between">
               <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-semibold">Login</button>
-              <button type="button" onclick="quickDemoStudent()" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Use Demo Student</button>
             </div>
             <div id="loginMessage" class="text-sm text-red-500 font-medium"></div>
           </form>
