@@ -499,5 +499,3 @@ function loadSampleData() {
   saveToStorage();
 }
 ```eof
-
-You can upload these three files (`index.html`, `styles.css`, and `app.js`) directly into your GitHub repository root folder, and GitHub Pages will update your live site automatically!
