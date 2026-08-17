@@ -8,7 +8,6 @@ let appState = {
   users: [],
   quizzes: [],
   results: [],
-  discussions: [],
   currentQuiz: null,
   timerInterval: null
 };
@@ -20,14 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function navigateTo(viewName) {
-  // If clicking Admin, intercept and show dedicated admin login if not already logged in as admin
   if (viewName === 'admin') {
     if (!appState.currentUser || appState.currentUser.role !== 'admin') {
       viewName = 'admin-login';
     }
   }
 
-  // Secure student dashboard / quiz views
   if (!appState.currentUser && ['dashboard', 'quiz', 'history'].includes(viewName)) {
     viewName = 'auth';
   }
@@ -165,7 +162,6 @@ function logout() {
 function loadStudentDashboard() {
   document.getElementById('userDisplay').textContent = appState.currentUser.name;
   renderStudentQuizzes();
-  renderDiscussionForum();
 }
 
 function renderStudentQuizzes() {
@@ -378,28 +374,6 @@ function viewCertificate(resId) {
     </div>
   `;
   document.body.appendChild(modal);
-}
-
-function renderDiscussionForum() {
-  const list = document.getElementById('discussionList');
-  if (!list) return;
-  list.innerHTML = '';
-  appState.discussions.slice(-6).forEach(d => {
-    const div = document.createElement('div');
-    div.className = 'p-2 rounded bg-gray-50 border border-gray-200';
-    div.innerHTML = `<div class="font-semibold text-indigo-600">${d.userName}</div><div class="text-gray-600">${d.message}</div>`;
-    list.appendChild(div);
-  });
-}
-
-function postDiscussion() {
-  const input = document.getElementById('discussionInput');
-  const msg = input.value.trim();
-  if (!msg) return;
-  appState.discussions.push({ id: 'd_' + Date.now(), userId: appState.currentUser.id, userName: appState.currentUser.name, message: msg });
-  input.value = '';
-  saveToStorage();
-  renderDiscussionForum();
 }
 
 function loadAdminDashboard() {
