@@ -46,6 +46,22 @@ function switchAuthTab(tab) {
   document.getElementById(`auth-${tab}`).classList.remove('hidden');
 }
 
+function validatePasswordStrength(password) {
+  const hasLower = /[a-z]/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+  const hasLength = password.length >= 8;
+
+  return hasLower && hasUpper && hasNumber && hasSpecial && hasLength;
+}
+
+function validatePhoneNumber(phone) {
+  // Checks if it starts with '+' and has between 10 to 15 total digits overall
+  const phoneRegex = /^\+[1-9]\d{9,14}$/;
+  return phoneRegex.test(phone);
+}
+
 function handleLogin(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmail').value;
@@ -60,23 +76,62 @@ function handleLogin(e) {
   navigateTo(user.role === 'admin' ? 'admin' : 'dashboard');
 }
 
+function openForgotPassword() {
+  const email = prompt('Enter your registered email address for password recovery:');
+  if (!email) return;
+  const user = appState.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (!user) {
+    alert('No account found with this email address.');
+    return;
+  }
+  const newPass = prompt('Enter your new secure password (must contain upper, lower, number, special character, min 8 chars):');
+  if (!newPass) return;
+  
+  if (!validatePasswordStrength(newPass)) {
+    alert('Password reset failed! Password does not meet security criteria (Length >= 8, uppercase, lowercase, number, special character).');
+    return;
+  }
+
+  user.password = newPass;
+  saveToStorage();
+  alert('Password updated successfully! You can now log in with your new password.');
+}
+
 function handleRegister(e) {
   e.preventDefault();
   const name = document.getElementById('regName').value;
   const email = document.getElementById('regEmail').value;
+  const phone = document.getElementById('regPhone').value.trim();
   const password = document.getElementById('regPassword').value;
-  const role = document.getElementById('regRole').value;
+
+  if (!validatePhoneNumber(phone)) {
+    document.getElementById('registerMessage').textContent = 'Invalid phone number format. Please include your country code starting with "+" (e.g., +919876543210).';
+    return;
+  }
+
+  if (!validatePasswordStrength(password)) {
+    document.getElementById('registerMessage').textContent = 'Password is too short or missing required criteria. Please check the rules above.';
+    return;
+  }
 
   if (appState.users.find(u => u.email === email)) {
     document.getElementById('registerMessage').textContent = 'Email already registered.';
     return;
   }
 
-  const newUser = { id: 'usr_' + Date.now(), name, email, password, role };
+  const newUser = { 
+    id: 'usr_' + Date.now(), 
+    name, 
+    email, 
+    phone, 
+    password, 
+    role: 'student' 
+  };
+  
   appState.users.push(newUser);
   appState.currentUser = newUser;
   saveToStorage();
-  navigateTo(role === 'admin' ? 'admin' : 'dashboard');
+  navigateTo('dashboard');
 }
 
 function logout() {
@@ -351,7 +406,7 @@ function renderAdminStudents() {
   appState.users.filter(u => u.role === 'student').forEach(s => {
     const div = document.createElement('div');
     div.className = 'p-3 rounded border border-gray-200 flex justify-between items-center text-xs';
-    div.innerHTML = `<div><span class="font-semibold">${s.name}</span> (${s.email})</div><button onclick="deleteStudent('${s.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Remove</button>`;
+    div.innerHTML = `<div><span class="font-semibold">${s.name}</span> (${s.email}${s.phone ? ' - ' + s.phone : ''})</div><button onclick="deleteStudent('${s.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Remove</button>`;
     container.appendChild(div);
   });
 }
@@ -442,8 +497,8 @@ function loadFromStorage() {
 function loadSampleData() {
   if (appState.users.length === 0) {
     appState.users.push(
-      { id: 'usr_admin', name: 'Admin User', email: 'admin@nivnish.com', password: 'admin123', role: 'admin' },
-      { id: 'usr_demo', name: 'Demo Student', email: 'student@demo.com', password: 'demo123', role: 'student' }
+      { id: 'usr_admin', name: 'Admin User', email: 'admin@nivnish.com', phone: '+919876543210', password: 'Admin@123', role: 'admin' },
+      { id: 'usr_demo', name: 'Demo Student', email: 'student@demo.com', phone: '+919123456789', password: 'Student@123', role: 'student' }
     );
   }
   if (appState.quizzes.length === 0) {
