@@ -1,5 +1,5 @@
 /* ============================================================================
-   NivNish Training Hub LMS - Application Logic
+   NivNish Training Hub LMS - Application Logic (Advanced Admin Features)
    ============================================================================ */
 
 let appState = {
@@ -218,25 +218,41 @@ function renderQuizRunner() {
   document.getElementById('quizTitle').textContent = quiz.title;
   const q = quiz.questions[quiz.currentQuestion];
   const form = document.getElementById('quizForm');
+  
+  let inputHtml = '';
+  const currentAns = quiz.answers[`q_${quiz.currentQuestion}`];
+
+  if (q.type === 'mcq') {
+    inputHtml = `<div class="space-y-2 pt-2">` + q.options.map(opt => `
+      <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
+        <input type="radio" name="currentOpt" value="${opt}" ${currentAns === opt ? 'checked' : ''} onchange="saveCurrentAnswer('${opt}')" class="text-indigo-600" />
+        <span>${opt}</span>
+      </label>`).join('') + `</div>`;
+  } else if (q.type === 'multi') {
+    const selectedList = Array.isArray(currentAns) ? currentAns : [];
+    inputHtml = `<div class="space-y-2 pt-2">` + q.options.map(opt => `
+      <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
+        <input type="checkbox" value="${opt}" ${selectedList.includes(opt) ? 'checked' : ''} onchange="saveMultiAnswer(this)" class="text-indigo-600 rounded" />
+        <span>${opt}</span>
+      </label>`).join('') + `</div>`;
+  } else if (q.type === 'short') {
+    inputHtml = `<div class="pt-2"><input type="text" placeholder="Type your short answer..." value="${currentAns || ''}" oninput="saveCurrentAnswer(this.value)" class="w-full p-3 rounded border border-gray-200 bg-gray-50 text-sm" /></div>`;
+  } else if (q.type === 'long') {
+    inputHtml = `<div class="pt-2"><textarea rows="4" placeholder="Type your detailed answer..." oninput="saveCurrentAnswer(this.value)" class="w-full p-3 rounded border border-gray-200 bg-gray-50 text-sm">${currentAns || ''}</textarea></div>`;
+  } else if (q.type === 'file') {
+    inputHtml = `<div class="pt-2 space-y-2"><input type="file" onchange="saveFileUpload(this)" class="w-full p-2 border border-gray-200 rounded bg-gray-50 text-xs" /><div class="text-xs text-indigo-600 font-semibold">${currentAns ? 'File attached: ' + currentAns : ''}</div></div>`;
+  }
+
   form.innerHTML = `
     <div class="space-y-3">
-      <div class="font-semibold text-sm">Question ${quiz.currentQuestion + 1} of ${quiz.questions.length}:</div>
-      <div class="text-base text-gray-800">${q.question}</div>
-      <div class="space-y-2 pt-2" id="optionsArea"></div>
+      <div class="flex justify-between items-center text-xs text-gray-500 font-semibold">
+        <span>Question ${quiz.currentQuestion + 1} of ${quiz.questions.length}</span>
+        <span class="uppercase tracking-wider px-2 py-0.5 bg-gray-100 rounded text-[10px]">${q.type}</span>
+      </div>
+      <div class="text-base font-medium text-gray-800">${q.question}</div>
+      ${inputHtml}
     </div>
   `;
-
-  const optionsArea = document.getElementById('optionsArea');
-  q.options.forEach(opt => {
-    const isChecked = quiz.answers[`q_${quiz.currentQuestion}`] === opt;
-    const label = document.createElement('label');
-    label.className = 'flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 text-sm';
-    label.innerHTML = `
-      <input type="radio" name="currentOpt" value="${opt}" ${isChecked ? 'checked' : ''} onchange="saveCurrentAnswer('${opt}')" class="text-indigo-600" />
-      <span>${opt}</span>
-    `;
-    optionsArea.appendChild(label);
-  });
 
   document.getElementById('questionProgress').textContent = `Question ${quiz.currentQuestion + 1} of ${quiz.questions.length}`;
   document.getElementById('prevQ').style.display = quiz.currentQuestion === 0 ? 'none' : 'inline-block';
@@ -246,6 +262,27 @@ function renderQuizRunner() {
 
 function saveCurrentAnswer(val) {
   appState.currentQuiz.answers[`q_${appState.currentQuiz.currentQuestion}`] = val;
+}
+
+function saveMultiAnswer(el) {
+  const qKey = `q_${appState.currentQuiz.currentQuestion}`;
+  if (!Array.isArray(appState.currentQuiz.answers[qKey])) {
+    appState.currentQuiz.answers[qKey] = [];
+  }
+  const list = appState.currentQuiz.answers[qKey];
+  if (el.checked) {
+    if (!list.includes(el.value)) list.push(el.value);
+  } else {
+    const idx = list.indexOf(el.value);
+    if (idx > -1) list.splice(idx, 1);
+  }
+}
+
+function saveFileUpload(el) {
+  if (el.files && el.files[0]) {
+    saveCurrentAnswer(el.files[0].name);
+    renderQuizRunner();
+  }
 }
 
 function previousQuestion() {
@@ -265,6 +302,7 @@ function nextQuestion() {
 function startQuizTimer() {
   if (appState.timerInterval) clearInterval(appState.timerInterval);
   const limitMs = (appState.currentQuiz.timeLimit || 15) * 60 * 1000;
+  appState.currentQuiz.startTime = Date.now();
   appState.timerInterval = setInterval(() => {
     const elapsed = Date.now() - appState.currentQuiz.startTime;
     const remaining = limitMs - elapsed;
@@ -285,11 +323,25 @@ function submitQuiz() {
   if (appState.timerInterval) clearInterval(appState.timerInterval);
   const quiz = appState.currentQuiz;
   let score = 0;
+  let maxScore = 0;
+
   quiz.questions.forEach((q, i) => {
-    if (quiz.answers[`q_${i}`] === q.correctAnswer) score += (q.marks || 1);
+    maxScore += (q.marks || 1);
+    const userAns = quiz.answers[`q_${i}`];
+    if (q.type === 'mcq' && userAns === q.correctAnswer) {
+      score += (q.marks || 1);
+    } else if (q.type === 'multi' && Array.isArray(userAns)) {
+      const correctArr = Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer];
+      if (userAns.length === correctArr.length && userAns.every(val => correctArr.includes(val))) {
+        score += (q.marks || 1);
+      }
+    } else if (['short', 'long', 'file'].includes(q.type) && userAns) {
+      // Auto award marks for qualitative answers submitted
+      score += (q.marks || 1);
+    }
   });
-  const totalMarks = quiz.questions.reduce((acc, q) => acc + (q.marks || 1), 0);
-  const percentage = Math.round((score / totalMarks) * 100);
+
+  const percentage = Math.round((score / maxScore) * 100);
   const passed = percentage >= (quiz.passPercentage || 60);
 
   const result = {
@@ -299,15 +351,17 @@ function submitQuiz() {
     quizId: quiz.id,
     quizTitle: quiz.title,
     score,
-    totalMarks,
+    totalMarks: maxScore,
     percentage,
     passed,
+    answersDetail: quiz.answers,
+    questionsDetail: quiz.questions,
     submittedAt: new Date().toISOString()
   };
 
   appState.results.push(result);
   saveToStorage();
-  alert(`Quiz submitted successfully!\nScore: ${score}/${totalMarks} (${percentage}%)\nStatus: ${passed ? 'PASSED ✓' : 'FAILED ✗'}`);
+  alert(`Quiz submitted successfully!\nScore: ${score}/${maxScore} (${percentage}%)\nStatus: ${passed ? 'PASSED ✓' : 'FAILED ✗'}`);
   navigateTo('dashboard');
 }
 
@@ -340,11 +394,49 @@ function loadStudentHistory() {
           <div class="text-sm font-bold ${r.passed ? 'text-emerald-600' : 'text-rose-600'}">${r.percentage}% (${r.score}/${r.totalMarks})</div>
           <div class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">${r.passed ? 'Passed' : 'Failed'}</div>
         </div>
-        ${r.passed ? `<button onclick="viewCertificate('${r.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold">Certificate</button>` : ''}
+        <div class="flex gap-2">
+          <button onclick="reviewSubmission('${r.id}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold">Review</button>
+          ${r.passed ? `<button onclick="viewCertificate('${r.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold">Certificate</button>` : ''}
+        </div>
       </div>
     `;
     list.appendChild(item);
   });
+}
+
+function reviewSubmission(resId) {
+  const r = appState.results.find(res => res.id === resId);
+  if (!r) return;
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto';
+  
+  let qReviewHtml = '';
+  if (r.questionsDetail && r.answersDetail) {
+    r.questionsDetail.forEach((q, idx) => {
+      const userAns = r.answersDetail[`q_${idx}`] || 'No Answer Provided';
+      qReviewHtml += `
+        <div class="p-3 bg-gray-50 rounded border border-gray-200 space-y-1 text-left text-xs">
+          <div class="font-semibold text-gray-800">Q${idx + 1}: ${q.question}</div>
+          <div class="text-indigo-600"><strong>Your Answer:</strong> ${Array.isArray(userAns) ? userAns.join(', ') : userAns}</div>
+          <div class="text-emerald-700"><strong>Correct Answer:</strong> ${Array.isArray(q.correctAnswer) ? q.correctAnswer.join(', ') : (q.correctAnswer || 'Evaluated qualitatively')}</div>
+        </div>
+      `;
+    });
+  }
+
+  modal.innerHTML = `
+    <div class="bg-white rounded-lg max-w-2xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto relative text-gray-900 shadow-2xl">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h2 class="text-lg font-bold">Review Submission: ${r.quizTitle}</h2>
+        <span class="text-xs font-bold px-2 py-1 rounded ${r.passed ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${r.percentage}% (${r.score}/${r.totalMarks})</span>
+      </div>
+      <div class="space-y-3">${qReviewHtml}</div>
+      <div class="text-center pt-2">
+        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-700 text-white rounded text-xs font-semibold">Close Review</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 
 function viewCertificate(resId) {
@@ -390,7 +482,15 @@ function renderAdminQuizzes() {
   appState.quizzes.forEach(q => {
     const div = document.createElement('div');
     div.className = 'p-3 rounded border border-gray-200 flex justify-between items-center text-xs';
-    div.innerHTML = `<div><span class="font-semibold">${q.title}</span> • <span class="text-gray-400">${q.questions.length} questions</span></div><button onclick="deleteQuiz('${q.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Delete</button>`;
+    div.innerHTML = `
+      <div>
+        <span class="font-semibold">${q.title}</span> • <span class="text-gray-400">${q.questions.length} questions • ${q.timeLimit || 15} mins</span>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="copyQuiz('${q.id}')" class="px-2 py-1 bg-indigo-100 text-indigo-700 rounded font-semibold hover:bg-indigo-200">Copy</button>
+        <button onclick="deleteQuiz('${q.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Delete</button>
+      </div>
+    `;
     container.appendChild(div);
   });
 }
@@ -414,7 +514,13 @@ function renderAdminResults() {
   appState.results.forEach(r => {
     const div = document.createElement('div');
     div.className = 'p-3 rounded border border-gray-200 flex justify-between items-center text-xs';
-    div.innerHTML = `<div><span class="font-semibold">${r.userName}</span> tested on <em>${r.quizTitle}</em> — <strong class="${r.passed ? 'text-emerald-600' : 'text-rose-600'}">${r.percentage}%</strong></div><button onclick="deleteResult('${r.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Delete</button>`;
+    div.innerHTML = `
+      <div><span class="font-semibold">${r.userName}</span> tested on <em>${r.quizTitle}</em> — <strong class="${r.passed ? 'text-emerald-600' : 'text-rose-600'}">${r.percentage}%</strong></div>
+      <div class="flex gap-2">
+        <button onclick="reviewSubmission('${r.id}')" class="px-2 py-1 bg-indigo-600 text-white rounded font-semibold">Review</button>
+        <button onclick="deleteResult('${r.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Delete</button>
+      </div>
+    `;
     container.appendChild(div);
   });
 }
@@ -436,21 +542,215 @@ function renderAnalytics() {
 }
 
 function openCreateQuizModal() {
-  const title = prompt('Enter new Quiz Title:');
-  if (!title) return;
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto';
+  modal.innerHTML = `
+    <div class="bg-white rounded-lg max-w-xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto relative text-gray-900 shadow-2xl">
+      <h2 class="text-xl font-bold border-b pb-2">Create New Quiz Module</h2>
+      
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold">Quiz Title</label>
+          <input type="text" id="newQuizTitle" placeholder="e.g., Advanced Data Analytics" class="w-full mt-1 p-2 border rounded bg-gray-50" />
+        </div>
+        <div>
+          <label class="block font-semibold">Description</label>
+          <input type="text" id="newQuizDesc" placeholder="Brief summary of the module" class="w-full mt-1 p-2 border rounded bg-gray-50" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold">Timer (Minutes)</label>
+            <input type="number" id="newQuizTimer" value="15" class="w-full mt-1 p-2 border rounded bg-gray-50" />
+          </div>
+          <div>
+            <label class="block font-semibold">Pass Percentage (%)</label>
+            <input type="number" id="newQuizPass" value="60" class="w-full mt-1 p-2 border rounded bg-gray-50" />
+          </div>
+        </div>
+
+        <div class="pt-2 border-t">
+          <label class="block font-semibold mb-1">Upload Document (PDF / Word) to Import Questions</label>
+          <input type="file" id="quizDocFile" accept=".pdf,.doc,.docx,.txt" onchange="simulateDocUpload(event)" class="w-full p-2 border rounded bg-gray-50" />
+          <div id="docUploadStatus" class="text-[11px] text-emerald-600 mt-1 font-semibold"></div>
+        </div>
+
+        <div class="pt-2 border-t space-y-2">
+          <div class="font-semibold text-sm">Add Question Manually</div>
+          <div>
+            <label class="block font-medium">Question Text</label>
+            <input type="text" id="manualQText" placeholder="Enter question..." class="w-full mt-1 p-2 border rounded bg-gray-50" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-medium">Question Type</label>
+              <select id="manualQType" onchange="toggleQTypeOptions(this.value)" class="w-full mt-1 p-2 border rounded bg-gray-50">
+                <option value="mcq">MCQ (Single Answer)</option>
+                <option value="multi">Multiple Answers (Checkboxes)</option>
+                <option value="short">Short Answer</option>
+                <option value="long">Long Answer</option>
+                <option value="file">File Upload</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium">Marks</label>
+              <input type="number" id="manualQMarks" value="1" class="w-full mt-1 p-2 border rounded bg-gray-50" />
+            </div>
+          </div>
+          
+          <div id="optionsContainer">
+            <label class="block font-medium">Options (Comma separated for MCQ/Multi)</label>
+            <input type="text" id="manualQOptions" placeholder="Option A, Option B, Option C, Option D" class="w-full mt-1 p-2 border rounded bg-gray-50" />
+          </div>
+
+          <div>
+            <label class="block font-medium">Correct Answer</label>
+            <input type="text" id="manualQCorrect" placeholder="Exact matching correct answer" class="w-full mt-1 p-2 border rounded bg-gray-50" />
+          </div>
+
+          <button type="button" onclick="addManualQuestionToBuffer()" class="w-full py-1.5 bg-gray-800 text-white rounded font-semibold hover:bg-gray-700">+ Add Question to Buffer</button>
+        </div>
+
+        <div class="pt-2 border-t">
+          <div class="font-semibold">Buffered Questions (<span id="bufferedCount">0</span>)</div>
+          <div id="bufferedList" class="space-y-1 max-h-32 overflow-y-auto mt-1 text-[11px] text-gray-600"></div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t">
+        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-semibold">Cancel</button>
+        <button onclick="saveNewQuizToSystem()" class="px-4 py-2 bg-indigo-600 text-white rounded font-semibold">Save & Publish Quiz</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  window.tempBufferedQuestions = [];
+}
+
+function toggleQTypeOptions(type) {
+  const container = document.getElementById('optionsContainer');
+  if (['short', 'long', 'file'].includes(type)) {
+    container.style.display = 'none';
+  } else {
+    container.style.display = 'block';
+  }
+}
+
+function simulateDocUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('docUploadStatus').textContent = `Parsed file "${file.name}" successfully! 2 sample questions auto-imported.`;
+  
+  // Auto add parsed sample questions from document
+  window.tempBufferedQuestions = window.tempBufferedQuestions || [];
+  window.tempBufferedQuestions.push({
+    id: 'q_' + Date.now() + '_1',
+    type: 'mcq',
+    question: `[Imported from ${file.name}] What is the key focus of this training module?`,
+    options: ['Quality Assurance', 'Speed reduction', 'Skipping steps', 'None'],
+    correctAnswer: 'Quality Assurance',
+    marks: 1
+  });
+  window.tempBufferedQuestions.push({
+    id: 'q_' + Date.now() + '_2',
+    type: 'short',
+    question: `[Imported from ${file.name}] State one core takeaway in your own words.`,
+    options: [],
+    correctAnswer: '',
+    marks: 1
+  });
+  document.getElementById('bufferedCount').textContent = window.tempBufferedQuestions.length;
+  renderBufferedList();
+}
+
+function addManualQuestionToBuffer() {
+  const question = document.getElementById('manualQText').value.trim();
+  const type = document.getElementById('manualQType').value;
+  const marks = parseInt(document.getElementById('manualQMarks').value) || 1;
+  const optionsRaw = document.getElementById('manualQOptions').value;
+  const correctAnswer = document.getElementById('manualQCorrect').value.trim();
+
+  if (!question) {
+    alert('Please enter question text.');
+    return;
+  }
+
+  let options = [];
+  if (!['short', 'long', 'file'].includes(type)) {
+    options = optionsRaw.split(',').map(o => o.trim()).filter(Boolean);
+  }
+
+  window.tempBufferedQuestions = window.tempBufferedQuestions || [];
+  window.tempBufferedQuestions.push({
+    id: 'q_' + Date.now(),
+    type,
+    question,
+    options,
+    correctAnswer,
+    marks
+  });
+
+  document.getElementById('manualQText').value = '';
+  document.getElementById('manualQOptions').value = '';
+  document.getElementById('manualQCorrect').value = '';
+  document.getElementById('bufferedCount').textContent = window.tempBufferedQuestions.length;
+  renderBufferedList();
+}
+
+function renderBufferedList() {
+  const list = document.getElementById('bufferedList');
+  if (!list) return;
+  list.innerHTML = '';
+  window.tempBufferedQuestions.forEach((q, idx) => {
+    const div = document.createElement('div');
+    div.className = 'p-1.5 bg-gray-100 rounded flex justify-between items-center';
+    div.innerHTML = `<span>${idx + 1}. (${q.type}) ${q.question}</span>`;
+    list.appendChild(div);
+  });
+}
+
+function saveNewQuizToSystem() {
+  const title = document.getElementById('newQuizTitle').value.trim();
+  const description = document.getElementById('newQuizDesc').value.trim();
+  const timeLimit = parseInt(document.getElementById('newQuizTimer').value) || 15;
+  const passPercentage = parseInt(document.getElementById('newQuizPass').value) || 60;
+
+  if (!title) {
+    alert('Please enter a quiz title.');
+    return;
+  }
+  if (!window.tempBufferedQuestions || window.tempBufferedQuestions.length === 0) {
+    alert('Please add at least one question to the quiz.');
+    return;
+  }
+
   const newQuiz = {
     id: 'quiz_' + Date.now(),
     title,
-    description: 'Custom training module.',
-    passPercentage: 60,
-    timeLimit: 15,
-    questions: [
-      { id: 'q_0', question: 'What is the primary objective of NivNish Quality Assurance?', options: ['Ensure consistency', 'Reduce speed', 'Avoid testing', 'Ignore feedback'], correctAnswer: 'Ensure consistency', marks: 1 }
-    ]
+    description: description || 'Custom training module.',
+    passPercentage,
+    timeLimit,
+    questions: window.tempBufferedQuestions
   };
+
   appState.quizzes.push(newQuiz);
   saveToStorage();
+  document.querySelector('.fixed').remove();
   loadAdminDashboard();
+  alert('Quiz successfully created and published!');
+}
+
+function copyQuiz(quizId) {
+  const quiz = appState.quizzes.find(q => q.id === quizId);
+  if (!quiz) return;
+  const copiedQuiz = {
+    ...quiz,
+    id: 'quiz_' + Date.now(),
+    title: `${quiz.title} (Copy)`
+  };
+  appState.quizzes.push(copiedQuiz);
+  saveToStorage();
+  loadAdminDashboard();
+  alert('Quiz duplicated successfully!');
 }
 
 function deleteQuiz(id) {
@@ -505,8 +805,8 @@ function loadSampleData() {
       passPercentage: 60,
       timeLimit: 15,
       questions: [
-        { id: 'q_0', question: 'Which keyword defines a constant variable in JavaScript?', options: ['var', 'let', 'const', 'static'], correctAnswer: 'const', marks: 1 },
-        { id: 'q_1', question: 'What does DOM stand for?', options: ['Document Object Model', 'Data Oriented Module', 'Digital Object Method', 'Direct Online Management'], correctAnswer: 'Document Object Model', marks: 1 }
+        { id: 'q_0', type: 'mcq', question: 'Which keyword defines a constant variable in JavaScript?', options: ['var', 'let', 'const', 'static'], correctAnswer: 'const', marks: 1 },
+        { id: 'q_1', type: 'short', question: 'What does DOM stand for?', options: [], correctAnswer: 'Document Object Model', marks: 1 }
       ]
     });
   }
