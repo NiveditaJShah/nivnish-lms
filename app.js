@@ -20,9 +20,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function navigateTo(viewName) {
-  if (!appState.currentUser && ['dashboard', 'quiz', 'history', 'admin'].includes(viewName)) {
+  // If clicking Admin, intercept and show dedicated admin login if not already logged in as admin
+  if (viewName === 'admin') {
+    if (!appState.currentUser || appState.currentUser.role !== 'admin') {
+      viewName = 'admin-login';
+    }
+  }
+
+  // Secure student dashboard / quiz views
+  if (!appState.currentUser && ['dashboard', 'quiz', 'history'].includes(viewName)) {
     viewName = 'auth';
   }
+
   appState.currentView = viewName;
   document.querySelectorAll('section[id^="view-"]').forEach(s => s.classList.add('hidden'));
   const target = document.getElementById(`view-${viewName}`);
@@ -57,7 +66,6 @@ function validatePasswordStrength(password) {
 }
 
 function validatePhoneNumber(phone) {
-  // Checks if it starts with '+' and has between 10 to 15 total digits overall
   const phoneRegex = /^\+[1-9]\d{9,14}$/;
   return phoneRegex.test(phone);
 }
@@ -76,6 +84,20 @@ function handleLogin(e) {
   navigateTo(user.role === 'admin' ? 'admin' : 'dashboard');
 }
 
+function handleAdminLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('adminLoginEmail').value;
+  const password = document.getElementById('adminLoginPassword').value;
+  const user = appState.users.find(u => u.email === email && u.password === password && u.role === 'admin');
+  if (!user) {
+    document.getElementById('adminLoginMessage').textContent = 'Invalid admin credentials.';
+    return;
+  }
+  appState.currentUser = user;
+  saveToStorage();
+  navigateTo('admin');
+}
+
 function openForgotPassword() {
   const email = prompt('Enter your registered email address for password recovery:');
   if (!email) return;
@@ -88,7 +110,7 @@ function openForgotPassword() {
   if (!newPass) return;
   
   if (!validatePasswordStrength(newPass)) {
-    alert('Password reset failed! Password does not meet security criteria (Length >= 8, uppercase, lowercase, number, special character).');
+    alert('Password reset failed! Password does not meet security criteria.');
     return;
   }
 
@@ -105,12 +127,12 @@ function handleRegister(e) {
   const password = document.getElementById('regPassword').value;
 
   if (!validatePhoneNumber(phone)) {
-    document.getElementById('registerMessage').textContent = 'Invalid phone number format. Please include your country code starting with "+" (e.g., +919876543210).';
+    document.getElementById('registerMessage').textContent = 'Invalid phone number format. Include country code starting with "+" (e.g., +919876543210).';
     return;
   }
 
   if (!validatePasswordStrength(password)) {
-    document.getElementById('registerMessage').textContent = 'Password is too short or missing required criteria. Please check the rules above.';
+    document.getElementById('registerMessage').textContent = 'Password is too short or missing required criteria. Check the rules above.';
     return;
   }
 
