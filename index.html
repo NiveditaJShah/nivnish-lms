@@ -12,7 +12,6 @@
   <script>
     tailwind = window.tailwind || {};
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: { sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui'] }
@@ -33,30 +32,25 @@
 
   <meta name="description" content="NivNish Training Hub - Pure For Sure LMS" />
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen">
+<body class="bg-gray-50 text-gray-800 min-h-screen">
   <!-- Header -->
-  <header class="bg-white dark:bg-gray-800 shadow sticky top-0 z-30">
+  <header class="bg-white shadow sticky top-0 z-30">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('home')">
-          <img src="./NivNish_Training_Logo-removebg-preview.png" alt="NivNish Training Hub" class="w-14 h-14 object-contain" />
+           <img src="./NivNish_Training_Logo-removebg-preview.png" alt="NivNish Training Hub" class="w-14 h-14 object-contain" />
           <div>
             <span class="text-lg sm:text-xl font-semibold">NivNish Training Hub</span>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Pure For Sure LMS</div>
+            <div class="text-xs text-gray-500">Pure For Sure LMS</div>
           </div>
         </div>
 
         <div class="flex items-center gap-2">
-          <button type="button" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle dark/light mode"
-                  class="p-2 rounded-md bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-yellow-300 hover:bg-gray-300 dark:hover:bg-gray-500 transition cursor-pointer">
-            <i id="themeIcon" class="fas fa-moon text-lg"></i>
-          </button>
-
           <nav class="flex items-center gap-1">
-            <button type="button" onclick="navigateTo('home')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700">Home</button>
-            <button type="button" onclick="navigateTo('auth')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700">Login</button>
-            <button type="button" onclick="navigateTo('dashboard')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700">Dashboard</button>
-            <button type="button" onclick="navigateTo('admin')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700">Admin</button>
+            <button type="button" onclick="navigateTo('home')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100">Home</button>
+            <button type="button" onclick="navigateTo('auth')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100">Login</button>
+            <button type="button" onclick="navigateTo('dashboard')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100">Dashboard</button>
+            <button type="button" onclick="navigateTo('admin')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100">Admin</button>
           </nav>
         </div>
       </div>
@@ -68,20 +62,20 @@
 
     <!-- HOME / LANDING VIEW -->
     <section id="view-home" class="">
-      <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center space-y-6">
+      <div class="max-w-4xl mx-auto bg-white rounded-lg shadow p-8 text-center space-y-6">
         <h1 class="text-3xl font-bold">Welcome to NivNish Training Hub</h1>
-        <p class="text-gray-600 dark:text-gray-300">Pure For Sure Learning Management System. Explore modules, assessments, and certifications below:</p>
+        <p class="text-gray-600">Pure For Sure Learning Management System. Explore modules, assessments, and certifications below:</p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-          <div class="p-6 border border-gray-200 dark:border-gray-700 rounded-lg bg-indigo-50/50 dark:bg-gray-700/40 space-y-3">
+          <div class="p-6 border border-gray-200 rounded-lg bg-indigo-50/50 space-y-3">
             <h2 class="text-xl font-semibold">Admin Portal</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-300">Create quizzes, manage student registrations, and view cohort analytics.</p>
+            <p class="text-sm text-gray-600">Create quizzes, manage student registrations, and view cohort analytics.</p>
             <button onclick="navigateTo('admin')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-semibold">Admin Access</button>
           </div>
 
-          <div class="p-6 border border-gray-200 dark:border-gray-700 rounded-lg bg-green-50/50 dark:bg-gray-700/40 space-y-3">
+          <div class="p-6 border border-gray-200 rounded-lg bg-green-50/50 space-y-3">
             <h2 class="text-xl font-semibold">Student Portal</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-300">Take assigned quizzes, track past scores, and earn verified printable certificates.</p>
+            <p class="text-sm text-gray-600">Take assigned quizzes, track past scores, and earn verified printable certificates.</p>
             <div class="flex gap-3 pt-1">
               <button onclick="navigateTo('auth')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-semibold">Student Login</button>
             </div>
@@ -92,8 +86,8 @@
 
     <!-- AUTH VIEW -->
     <section id="view-auth" class="hidden">
-      <div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <div class="flex border-b border-gray-200 dark:border-gray-700 mb-4">
+      <div class="max-w-3xl mx-auto bg-white rounded-lg shadow p-6">
+        <div class="flex border-b border-gray-200 mb-4">
           <button class="auth-tab px-4 py-2 -mb-px font-semibold border-b-2 border-indigo-600 text-indigo-600" onclick="switchAuthTab('login')">Login</button>
           <button class="auth-tab px-4 py-2 -mb-px font-semibold text-gray-500" onclick="switchAuthTab('register')">Register</button>
         </div>
@@ -102,11 +96,11 @@
           <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
             <div>
               <label class="block text-sm font-medium">Email</label>
-              <input required type="email" id="loginEmail" value="student@demo.com" class="w-full mt-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
+              <input required type="email" id="loginEmail" value="student@demo.com" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
             </div>
             <div>
               <label class="block text-sm font-medium">Password</label>
-              <input required type="password" id="loginPassword" value="demo123" class="w-full mt-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
+              <input required type="password" id="loginPassword" value="demo123" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
             </div>
             <div class="flex items-center justify-between">
               <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-semibold">Login</button>
@@ -119,19 +113,19 @@
           <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4">
             <div>
               <label class="block text-sm font-medium">Full Name</label>
-              <input required type="text" id="regName" class="w-full mt-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
+              <input required type="text" id="regName" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
             </div>
             <div>
               <label class="block text-sm font-medium">Email</label>
-              <input required type="email" id="regEmail" class="w-full mt-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
+              <input required type="email" id="regEmail" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
             </div>
             <div>
               <label class="block text-sm font-medium">Password</label>
-              <input required type="password" id="regPassword" class="w-full mt-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2" />
+              <input required type="password" id="regPassword" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
             </div>
             <div>
               <label class="block text-sm font-medium">Role</label>
-              <select id="regRole" class="w-full mt-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2">
+              <select id="regRole" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2">
                 <option value="student">Student</option>
                 <option value="admin">Admin</option>
               </select>
@@ -149,30 +143,30 @@
     <section id="view-dashboard" class="hidden">
       <div class="flex flex-col md:flex-row md:items-start gap-4">
         <div class="flex-1 space-y-4">
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-4 rounded-lg shadow">
             <h2 class="text-xl font-semibold">Assigned Quizzes</h2>
             <div class="flex items-center gap-2 w-full sm:w-auto">
-              <input id="quizSearch" oninput="filterQuizzes()" placeholder="Search quizzes..." class="p-2 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm flex-1 sm:w-60" />
-              <button onclick="navigateTo('history')" class="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded text-sm font-semibold hover:bg-gray-200">History</button>
+              <input id="quizSearch" oninput="filterQuizzes()" placeholder="Search quizzes..." class="p-2 rounded border border-gray-200 bg-gray-50 text-sm flex-1 sm:w-60" />
+              <button onclick="navigateTo('history')" class="px-3 py-2 bg-gray-100 rounded text-sm font-semibold hover:bg-gray-200">History</button>
             </div>
           </div>
 
           <div id="quizzesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         </div>
 
-        <aside class="w-full md:w-80 bg-white dark:bg-gray-800 rounded-lg p-4 shadow space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700">
+        <aside class="w-full md:w-80 bg-white rounded-lg p-4 shadow space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-100">
             <div>
               <div class="text-xs text-gray-500">Signed in as</div>
               <div id="userDisplay" class="font-semibold text-sm">Guest User</div>
             </div>
-            <button onclick="logout()" class="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 text-xs font-semibold rounded hover:bg-rose-100">Logout</button>
+            <button onclick="logout()" class="px-2.5 py-1.5 bg-rose-50 text-rose-600 text-xs font-semibold rounded hover:bg-rose-100">Logout</button>
           </div>
 
           <div class="space-y-2">
             <h3 class="font-semibold text-sm">Course Discussion</h3>
             <div id="discussionList" class="space-y-2 max-h-48 overflow-y-auto text-xs pr-1"></div>
-            <textarea id="discussionInput" rows="2" placeholder="Ask a question..." class="w-full p-2 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs resize-none"></textarea>
+            <textarea id="discussionInput" rows="2" placeholder="Ask a question..." class="w-full p-2 rounded border border-gray-200 bg-gray-50 text-xs resize-none"></textarea>
             <button onclick="postDiscussion()" class="w-full py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold">Post Message</button>
           </div>
         </aside>
@@ -181,21 +175,21 @@
 
     <!-- QUIZ RUNNER -->
     <section id="view-quiz" class="hidden">
-      <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg p-6 shadow space-y-6">
-        <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700">
+      <div class="max-w-2xl mx-auto bg-white rounded-lg p-6 shadow space-y-6">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
           <div>
             <h2 id="quizTitle" class="text-xl font-semibold">Quiz Title</h2>
             <div id="quizMeta" class="text-xs text-gray-500 mt-0.5">Timer: <span id="quizTimer" class="font-mono font-bold text-rose-500">15:00</span></div>
           </div>
-          <button onclick="exitQuiz()" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-semibold">Exit</button>
+          <button onclick="exitQuiz()" class="px-3 py-1.5 bg-gray-100 rounded text-xs font-semibold">Exit</button>
         </div>
 
         <form id="quizForm" class="space-y-4 min-h-[200px]"></form>
 
-        <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
           <div id="questionProgress" class="text-xs text-gray-500 font-medium">Question 1 / 1</div>
           <div class="flex gap-2">
-            <button id="prevQ" onclick="previousQuestion()" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-semibold">Previous</button>
+            <button id="prevQ" onclick="previousQuestion()" class="px-3 py-1.5 bg-gray-100 rounded text-xs font-semibold">Previous</button>
             <button id="nextQ" onclick="nextQuestion()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold">Next</button>
             <button id="submitQuiz" onclick="submitQuiz()" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold">Submit Quiz</button>
           </div>
@@ -205,8 +199,8 @@
 
     <!-- HISTORY & CERTIFICATES -->
     <section id="view-history" class="hidden">
-      <div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg p-6 shadow space-y-4">
-        <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700">
+      <div class="max-w-3xl mx-auto bg-white rounded-lg p-6 shadow space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
           <h2 class="text-xl font-semibold">Your Results & Certificates</h2>
           <button onclick="navigateTo('dashboard')" class="px-3 py-1.5 bg-indigo-600 text-white rounded text-xs font-semibold">Back to Dashboard</button>
         </div>
@@ -217,22 +211,22 @@
     <!-- ADMIN DASHBOARD -->
     <section id="view-admin" class="hidden">
       <div class="space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-lg shadow">
           <h2 class="text-2xl font-semibold">Admin Command Center</h2>
           <div class="flex items-center gap-2">
             <button onclick="openCreateQuizModal()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold">+ Create Quiz</button>
-            <button onclick="document.getElementById('bulkFile').click()" class="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded text-xs font-semibold">Bulk Student Import</button>
+            <button onclick="document.getElementById('bulkFile').click()" class="px-3 py-2 bg-gray-100 rounded text-xs font-semibold">Bulk Student Import</button>
             <input id="bulkFile" type="file" accept=".csv" class="hidden" onchange="handleBulkImport(event)" />
           </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="col-span-2 bg-white dark:bg-gray-800 rounded-lg p-4 shadow space-y-3">
+          <div class="col-span-2 bg-white rounded-lg p-4 shadow space-y-3">
             <h3 class="font-semibold text-sm">Active Quizzes</h3>
             <div id="adminQuizzes" class="space-y-2"></div>
           </div>
 
-          <aside class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow space-y-3 text-center">
+          <aside class="bg-white rounded-lg p-4 shadow space-y-3 text-center">
             <h3 class="font-semibold text-sm text-left">Cohort Pass Analytics</h3>
             <div class="chart-container" style="position: relative; height: 220px; max-width: 260px; margin: 0 auto;">
               <canvas id="gradesChart"></canvas>
@@ -241,12 +235,12 @@
           </aside>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow space-y-3">
+        <div class="bg-white rounded-lg p-4 shadow space-y-3">
           <h3 class="font-semibold text-sm">Registered Students</h3>
           <div id="adminStudents" class="space-y-2"></div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow space-y-3">
+        <div class="bg-white rounded-lg p-4 shadow space-y-3">
           <h3 class="font-semibold text-sm">Student Submissions & Grades</h3>
           <div id="adminResults" class="space-y-2"></div>
         </div>
