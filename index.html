@@ -38,8 +38,7 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('home')">
-           <img src="./NivNish_Training_Logo-removebg-preview.png" alt="NivNish Training Hub" class="w-14 h-14 object-contain" />
-          <div>
+          <img src="./NivNish_Training_Logo-removebg-preview.png" alt="NivNish Training Hub" class="w-14 h-14 object-contain" />          <div>
             <span class="text-lg sm:text-xl font-semibold">NivNish Training Hub</span>
             <div class="text-xs text-gray-500">Pure For Sure LMS</div>
           </div>
@@ -92,15 +91,24 @@
           <button class="auth-tab px-4 py-2 -mb-px font-semibold text-gray-500" onclick="switchAuthTab('register')">Register</button>
         </div>
 
+        <!-- LOGIN FORM -->
         <div id="auth-login" class="auth-panel">
           <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
             <div>
               <label class="block text-sm font-medium">Email</label>
-              <input required type="email" id="loginEmail" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
+              <input required type="email" id="loginEmail" placeholder="Enter your email" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
             </div>
             <div>
-              <label class="block text-sm font-medium">Password</label>
-              <input required type="password" id="loginPassword" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
+              <div class="flex justify-between items-center">
+                <label class="block text-sm font-medium">Password</label>
+                <button type="button" onclick="openForgotPassword()" class="text-xs text-indigo-600 hover:underline">Forgot Password?</button>
+              </div>
+              <div class="relative mt-1">
+                <input required type="password" id="loginPassword" placeholder="Enter your password" class="w-full rounded border border-gray-200 bg-gray-50 p-2 pr-10" />
+                <button type="button" onclick="togglePasswordVisibility('loginPassword', 'loginEyeIcon')" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
+                  <i id="loginEyeIcon" class="fas fa-eye"></i>
+                </button>
+              </div>
             </div>
             <div class="flex items-center justify-between">
               <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-semibold">Login</button>
@@ -109,26 +117,40 @@
           </form>
         </div>
 
+        <!-- REGISTER FORM -->
         <div id="auth-register" class="auth-panel hidden">
           <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4">
             <div>
               <label class="block text-sm font-medium">Full Name</label>
-              <input required type="text" id="regName" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
+              <input required type="text" id="regName" placeholder="Enter your full name" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
             </div>
             <div>
               <label class="block text-sm font-medium">Email</label>
-              <input required type="email" id="regEmail" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
+              <input required type="email" id="regEmail" placeholder="Enter your email" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium">Phone Number (with Country Code, e.g., +91...)</label>
+              <input required type="tel" id="regPhone" placeholder="+919876543210" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
             </div>
             <div>
               <label class="block text-sm font-medium">Password</label>
-              <input required type="password" id="regPassword" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium">Role</label>
-              <select id="regRole" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2">
-                <option value="student">Student</option>
-                <option value="admin">Admin</option>
-              </select>
+              <div class="relative mt-1">
+                <input required type="password" id="regPassword" placeholder="Create a password" class="w-full rounded border border-gray-200 bg-gray-50 p-2 pr-10" />
+                <button type="button" onclick="togglePasswordVisibility('regPassword', 'regEyeIcon')" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
+                  <i id="regEyeIcon" class="fas fa-eye"></i>
+                </button>
+              </div>
+              <!-- Visible Instructions for Password Requirements -->
+              <div class="mt-2 text-xs text-gray-500 bg-gray-50 p-2.5 rounded border border-gray-100 space-y-1">
+                <div class="font-semibold text-gray-700">Password Requirements:</div>
+                <ul id="passwordCriteria" class="list-disc pl-4 space-y-0.5">
+                  <li id="crit-length" class="text-rose-500">At least 8 characters long</li>
+                  <li id="crit-upper" class="text-rose-500">At least one uppercase letter (A-Z)</li>
+                  <li id="crit-lower" class="text-rose-500">At least one lowercase letter (a-z)</li>
+                  <li id="crit-number" class="text-rose-500">At least one number (0-9)</li>
+                  <li id="crit-special" class="text-rose-500">At least one wild/special character (e.g. @, #, $, !)</li>
+                </ul>
+              </div>
             </div>
             <div>
               <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-semibold">Register Account</button>
@@ -248,6 +270,47 @@
     </section>
 
   </main>
+
+  <!-- Inline Helper Scripts -->
+  <script>
+    function togglePasswordVisibility(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const regPassInput = document.getElementById('regPassword');
+      if (regPassInput) {
+        regPassInput.addEventListener('input', (e) => {
+          const val = e.target.value;
+          updateCriterion('crit-length', val.length >= 8);
+          updateCriterion('crit-upper', /[A-Z]/.test(val));
+          updateCriterion('crit-lower', /[a-z]/.test(val));
+          updateCriterion('crit-number', /[0-9]/.test(val));
+          updateCriterion('crit-special', /[^A-Za-z0-9]/.test(val));
+        });
+      }
+    });
+
+    function updateCriterion(elemId, isValid) {
+      const el = document.getElementById(elemId);
+      if (!el) return;
+      if (isValid) {
+        el.className = 'text-emerald-600 font-medium';
+        if (!el.textContent.includes('✓')) el.textContent += ' ✓';
+      } else {
+        el.className = 'text-rose-500';
+        el.textContent = el.textContent.replace(' ✓', '');
+      }
+    }
+  </script>
 
   <!-- External App Script -->
   <script src="app.js"></script>
