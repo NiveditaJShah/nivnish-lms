@@ -38,7 +38,8 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('home')">
-          <img src="./NivNish_Training_Logo-removebg-preview.png" alt="NivNish Training Hub" class="w-14 h-14 object-contain" />          <div>
+          <img src="./logo.png" alt="NivNish Training Hub" class="h-14 w-auto object-contain" />
+          <div>
             <span class="text-lg sm:text-xl font-semibold">NivNish Training Hub</span>
             <div class="text-xs text-gray-500">Pure For Sure LMS</div>
           </div>
@@ -83,7 +84,7 @@
       </div>
     </section>
 
-    <!-- AUTH VIEW -->
+    <!-- AUTH VIEW (STUDENT LOGIN / REGISTER) -->
     <section id="view-auth" class="hidden">
       <div class="max-w-3xl mx-auto bg-white rounded-lg shadow p-6">
         <div class="flex border-b border-gray-200 mb-4">
@@ -140,7 +141,6 @@
                   <i id="regEyeIcon" class="fas fa-eye"></i>
                 </button>
               </div>
-              <!-- Visible Instructions for Password Requirements -->
               <div class="mt-2 text-xs text-gray-500 bg-gray-50 p-2.5 rounded border border-gray-100 space-y-1">
                 <div class="font-semibold text-gray-700">Password Requirements:</div>
                 <ul id="passwordCriteria" class="list-disc pl-4 space-y-0.5">
@@ -158,6 +158,35 @@
             <div id="registerMessage" class="text-sm text-red-500 font-medium"></div>
           </form>
         </div>
+      </div>
+    </section>
+
+    <!-- ADMIN LOGIN VIEW -->
+    <section id="view-admin-login" class="hidden">
+      <div class="max-w-md mx-auto bg-white rounded-lg shadow p-6 space-y-4">
+        <div class="text-center pb-2 border-b border-gray-100">
+          <h2 class="text-xl font-bold">Admin Portal Authentication</h2>
+          <p class="text-xs text-gray-500 mt-0.5">Authorized personnel only</p>
+        </div>
+        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium">Admin Email</label>
+            <input required type="email" id="adminLoginEmail" placeholder="admin@nivnish.com" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Password</label>
+            <div class="relative mt-1">
+              <input required type="password" id="adminLoginPassword" placeholder="Enter admin password" class="w-full rounded border border-gray-200 bg-gray-50 p-2 pr-10" />
+              <button type="button" onclick="togglePasswordVisibility('adminLoginPassword', 'adminEyeIcon')" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
+                <i id="adminEyeIcon" class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          <div>
+            <button type="submit" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-semibold">Admin Login</button>
+          </div>
+          <div id="adminLoginMessage" class="text-sm text-red-500 font-medium text-center"></div>
+        </form>
       </div>
     </section>
 
@@ -239,6 +268,7 @@
             <button onclick="openCreateQuizModal()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold">+ Create Quiz</button>
             <button onclick="document.getElementById('bulkFile').click()" class="px-3 py-2 bg-gray-100 rounded text-xs font-semibold">Bulk Student Import</button>
             <input id="bulkFile" type="file" accept=".csv" class="hidden" onchange="handleBulkImport(event)" />
+            <button onclick="logout()" class="px-3 py-2 bg-rose-50 text-rose-600 rounded text-xs font-semibold hover:bg-rose-100">Logout</button>
           </div>
         </div>
 
