@@ -16,7 +16,6 @@ let appState = {
 document.addEventListener('DOMContentLoaded', () => {
   loadFromStorage();
   loadSampleData();
-  initializeTheme();
   navigateTo('home');
 });
 
@@ -45,45 +44,6 @@ function switchAuthTab(tab) {
 
   document.querySelectorAll('.auth-panel').forEach(p => p.classList.add('hidden'));
   document.getElementById(`auth-${tab}`).classList.remove('hidden');
-}
-
-function toggleTheme() {
-  const html = document.documentElement;
-  const isDark = html.classList.contains('dark');
-  const icon = document.getElementById('themeIcon');
-  
-  if (isDark) {
-    html.classList.remove('dark');
-    localStorage.setItem('theme', 'light');
-    if (icon) {
-      icon.className = 'fas fa-moon text-lg';
-    }
-  } else {
-    html.classList.add('dark');
-    localStorage.setItem('theme', 'dark');
-    if (icon) {
-      icon.className = 'fas fa-sun text-lg';
-    }
-  }
-}
-
-function initializeTheme() {
-  const theme = localStorage.getItem('theme') || 'light';
-  const icon = document.getElementById('themeIcon');
-  
-  if (theme === 'dark') {
-    document.documentElement.classList.add('dark');
-    if (icon) icon.className = 'fas fa-sun text-lg';
-  } else {
-    document.documentElement.classList.remove('dark');
-    if (icon) icon.className = 'fas fa-moon text-lg';
-  }
-  
-  const themeToggleBtn = document.getElementById('themeToggle');
-  if (themeToggleBtn) {
-    themeToggleBtn.replaceWith(themeToggleBtn.cloneNode(true));
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-  }
 }
 
 function handleLogin(e) {
@@ -138,18 +98,18 @@ function renderStudentQuizzes() {
   appState.quizzes.forEach(quiz => {
     const completed = appState.results.find(r => r.userId === appState.currentUser.id && r.quizId === quiz.id);
     const card = document.createElement('div');
-    card.className = 'bg-white dark:bg-gray-700/60 rounded-lg p-4 border border-gray-200 dark:border-gray-700 shadow-sm space-y-3';
+    card.className = 'bg-white rounded-lg p-4 border border-gray-200 shadow-sm space-y-3';
     card.innerHTML = `
       <div class="flex justify-between items-start">
         <h3 class="font-semibold text-base">${quiz.title}</h3>
-        <span class="text-[11px] px-2 py-0.5 rounded font-bold ${completed ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'}">
+        <span class="text-[11px] px-2 py-0.5 rounded font-bold ${completed ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
           ${completed ? 'Completed' : 'Available'}
         </span>
       </div>
-      <p class="text-xs text-gray-500 dark:text-gray-300 leading-relaxed">${quiz.description || 'Enterprise training module.'}</p>
-      <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-600 text-xs">
+      <p class="text-xs text-gray-500 leading-relaxed">${quiz.description || 'Enterprise training module.'}</p>
+      <div class="flex items-center justify-between pt-2 border-t border-gray-100 text-xs">
         <span class="text-gray-400">${quiz.questions.length} questions • ${quiz.timeLimit || 15} mins</span>
-        <button onclick="startQuiz('${quiz.id}')" class="px-3 py-1.5 rounded text-xs font-semibold ${completed ? 'bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-300 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}" ${completed ? 'disabled' : ''}>
+        <button onclick="startQuiz('${quiz.id}')" class="px-3 py-1.5 rounded text-xs font-semibold ${completed ? 'bg-gray-200 text-gray-600 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}" ${completed ? 'disabled' : ''}>
           ${completed ? 'Completed' : 'Start Quiz'}
         </button>
       </div>
@@ -188,7 +148,7 @@ function renderQuizRunner() {
   form.innerHTML = `
     <div class="space-y-3">
       <div class="font-semibold text-sm">Question ${quiz.currentQuestion + 1} of ${quiz.questions.length}:</div>
-      <div class="text-base text-gray-800 dark:text-gray-200">${q.question}</div>
+      <div class="text-base text-gray-800">${q.question}</div>
       <div class="space-y-2 pt-2" id="optionsArea"></div>
     </div>
   `;
@@ -197,7 +157,7 @@ function renderQuizRunner() {
   q.options.forEach(opt => {
     const isChecked = quiz.answers[`q_${quiz.currentQuestion}`] === opt;
     const label = document.createElement('label');
-    label.className = 'flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 text-sm';
+    label.className = 'flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 text-sm';
     label.innerHTML = `
       <input type="radio" name="currentOpt" value="${opt}" ${isChecked ? 'checked' : ''} onchange="saveCurrentAnswer('${opt}')" class="text-indigo-600" />
       <span>${opt}</span>
@@ -296,7 +256,7 @@ function loadStudentHistory() {
   }
   myResults.forEach(r => {
     const item = document.createElement('div');
-    item.className = 'p-4 rounded border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-50 dark:bg-gray-700/40';
+    item.className = 'p-4 rounded border border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-50';
     item.innerHTML = `
       <div>
         <div class="font-semibold text-sm">${r.quizTitle}</div>
@@ -349,8 +309,8 @@ function renderDiscussionForum() {
   list.innerHTML = '';
   appState.discussions.slice(-6).forEach(d => {
     const div = document.createElement('div');
-    div.className = 'p-2 rounded bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700';
-    div.innerHTML = `<div class="font-semibold text-indigo-600 dark:text-indigo-400">${d.userName}</div><div class="text-gray-600 dark:text-gray-300">${d.message}</div>`;
+    div.className = 'p-2 rounded bg-gray-50 border border-gray-200';
+    div.innerHTML = `<div class="font-semibold text-indigo-600">${d.userName}</div><div class="text-gray-600">${d.message}</div>`;
     list.appendChild(div);
   });
 }
@@ -378,7 +338,7 @@ function renderAdminQuizzes() {
   container.innerHTML = '';
   appState.quizzes.forEach(q => {
     const div = document.createElement('div');
-    div.className = 'p-3 rounded border border-gray-200 dark:border-gray-700 flex justify-between items-center text-xs';
+    div.className = 'p-3 rounded border border-gray-200 flex justify-between items-center text-xs';
     div.innerHTML = `<div><span class="font-semibold">${q.title}</span> • <span class="text-gray-400">${q.questions.length} questions</span></div><button onclick="deleteQuiz('${q.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Delete</button>`;
     container.appendChild(div);
   });
@@ -390,7 +350,7 @@ function renderAdminStudents() {
   container.innerHTML = '';
   appState.users.filter(u => u.role === 'student').forEach(s => {
     const div = document.createElement('div');
-    div.className = 'p-3 rounded border border-gray-200 dark:border-gray-700 flex justify-between items-center text-xs';
+    div.className = 'p-3 rounded border border-gray-200 flex justify-between items-center text-xs';
     div.innerHTML = `<div><span class="font-semibold">${s.name}</span> (${s.email})</div><button onclick="deleteStudent('${s.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Remove</button>`;
     container.appendChild(div);
   });
@@ -402,7 +362,7 @@ function renderAdminResults() {
   container.innerHTML = '';
   appState.results.forEach(r => {
     const div = document.createElement('div');
-    div.className = 'p-3 rounded border border-gray-200 dark:border-gray-700 flex justify-between items-center text-xs';
+    div.className = 'p-3 rounded border border-gray-200 flex justify-between items-center text-xs';
     div.innerHTML = `<div><span class="font-semibold">${r.userName}</span> tested on <em>${r.quizTitle}</em> — <strong class="${r.passed ? 'text-emerald-600' : 'text-rose-600'}">${r.percentage}%</strong></div><button onclick="deleteResult('${r.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Delete</button>`;
     container.appendChild(div);
   });
