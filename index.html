@@ -94,8 +94,8 @@
     <section id="view-auth" class="hidden">
       <div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div class="flex border-b border-gray-200 dark:border-gray-700 mb-4">
-          <button class="auth-tab px-4 py-2 -mb-px font-semibold border-b-2 border-indigo-600 text-indigo-600" onclick="switchAuthTab('login', event)">Login</button>
-          <button class="auth-tab px-4 py-2 -mb-px font-semibold text-gray-500" onclick="switchAuthTab('register', event)">Register</button>
+          <button class="auth-tab px-4 py-2 -mb-px font-semibold border-b-2 border-indigo-600 text-indigo-600" onclick="switchAuthTab('login')">Login</button>
+          <button class="auth-tab px-4 py-2 -mb-px font-semibold text-gray-500" onclick="switchAuthTab('register')">Register</button>
         </div>
 
         <div id="auth-login" class="auth-panel">
@@ -152,7 +152,7 @@
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
             <h2 class="text-xl font-semibold">Assigned Quizzes</h2>
             <div class="flex items-center gap-2 w-full sm:w-auto">
-              <input id="quizSearch" oninput="filterQuizzes()" placeholder="Search quizzes..." class="p-2 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm f[...]
+              <input id="quizSearch" oninput="filterQuizzes()" placeholder="Search quizzes..." class="p-2 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm flex-1 sm:w-60" />
               <button onclick="navigateTo('history')" class="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded text-sm font-semibold hover:bg-gray-200">History</button>
             </div>
           </div>
@@ -172,7 +172,7 @@
           <div class="space-y-2">
             <h3 class="font-semibold text-sm">Course Discussion</h3>
             <div id="discussionList" class="space-y-2 max-h-48 overflow-y-auto text-xs pr-1"></div>
-            <textarea id="discussionInput" rows="2" placeholder="Ask a question..." class="w-full p-2 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs resiz[...]
+            <textarea id="discussionInput" rows="2" placeholder="Ask a question..." class="w-full p-2 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs resize-none"></textarea>
             <button onclick="postDiscussion()" class="w-full py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold">Post Message</button>
           </div>
         </aside>
