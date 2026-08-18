@@ -1,5 +1,5 @@
 /* ============================================================================
-   NivNish Training Hub LMS - Application Logic (Advanced Admin Features)
+   NivNish Training Hub LMS - Application Logic (Preview & Publish Toggle)
    ============================================================================ */
 
 let appState = {
@@ -168,7 +168,16 @@ function renderStudentQuizzes() {
   const grid = document.getElementById('quizzesGrid');
   if (!grid) return;
   grid.innerHTML = '';
-  appState.quizzes.forEach(quiz => {
+  
+  // Only display published quizzes to students
+  const activeQuizzes = appState.quizzes.filter(q => q.isPublished !== false);
+  
+  if (activeQuizzes.length === 0) {
+    grid.innerHTML = '<p class="text-sm text-gray-500">No active training quizzes available at the moment.</p>';
+    return;
+  }
+
+  activeQuizzes.forEach(quiz => {
     const completed = appState.results.find(r => r.userId === appState.currentUser.id && r.quizId === quiz.id);
     const card = document.createElement('div');
     card.className = 'bg-white rounded-lg p-4 border border-gray-200 shadow-sm space-y-3';
@@ -336,7 +345,6 @@ function submitQuiz() {
         score += (q.marks || 1);
       }
     } else if (['short', 'long', 'file'].includes(q.type) && userAns) {
-      // Auto award marks for qualitative answers submitted
       score += (q.marks || 1);
     }
   });
@@ -480,19 +488,66 @@ function renderAdminQuizzes() {
   if (!container) return;
   container.innerHTML = '';
   appState.quizzes.forEach(q => {
+    const isPublished = q.isPublished !== false;
     const div = document.createElement('div');
-    div.className = 'p-3 rounded border border-gray-200 flex justify-between items-center text-xs';
+    div.className = 'p-3 rounded border border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs';
     div.innerHTML = `
       <div>
         <span class="font-semibold">${q.title}</span> • <span class="text-gray-400">${q.questions.length} questions • ${q.timeLimit || 15} mins</span>
       </div>
-      <div class="flex gap-2">
+      <div class="flex items-center gap-2">
+        <label class="flex items-center gap-1 cursor-pointer select-none">
+          <span class="text-[11px] font-medium text-gray-600">Publish:</span>
+          <input type="checkbox" ${isPublished ? 'checked' : ''} onchange="togglePublishQuiz('${q.id}', this.checked)" class="rounded text-indigo-600 cursor-pointer" />
+        </label>
+        <button onclick="previewQuiz('${q.id}')" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded font-semibold hover:bg-emerald-200">Preview</button>
         <button onclick="copyQuiz('${q.id}')" class="px-2 py-1 bg-indigo-100 text-indigo-700 rounded font-semibold hover:bg-indigo-200">Copy</button>
         <button onclick="deleteQuiz('${q.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Delete</button>
       </div>
     `;
     container.appendChild(div);
   });
+}
+
+function togglePublishQuiz(quizId, status) {
+  const quiz = appState.quizzes.find(q => q.id === quizId);
+  if (quiz) {
+    quiz.isPublished = status;
+    saveToStorage();
+  }
+}
+
+function previewQuiz(quizId) {
+  const quiz = appState.quizzes.find(q => q.id === quizId);
+  if (!quiz) return;
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto';
+  
+  let qListHtml = '';
+  quiz.questions.forEach((q, idx) => {
+    qListHtml += `
+      <div class="p-3 bg-gray-50 rounded border border-gray-200 space-y-1 text-left text-xs">
+        <div class="font-semibold text-gray-800">Q${idx + 1} (${q.type}): ${q.question}</div>
+        ${q.options && q.options.length ? `<div class="text-gray-600"><strong>Options:</strong> ${q.options.join(', ')}</div>` : ''}
+        <div class="text-emerald-700"><strong>Correct Answer:</strong> ${Array.isArray(q.correctAnswer) ? q.correctAnswer.join(', ') : (q.correctAnswer || 'Qualitative')}</div>
+      </div>
+    `;
+  });
+
+  modal.innerHTML = `
+    <div class="bg-white rounded-lg max-w-2xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto relative text-gray-900 shadow-2xl">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h2 class="text-lg font-bold">Quiz Preview: ${quiz.title}</h2>
+        <span class="text-xs text-gray-500">${quiz.questions.length} Questions • ${quiz.timeLimit || 15} mins</span>
+      </div>
+      <p class="text-xs text-gray-600">${quiz.description || ''}</p>
+      <div class="space-y-3">${qListHtml}</div>
+      <div class="text-center pt-2">
+        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-700 text-white rounded text-xs font-semibold">Close Preview</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 
 function renderAdminStudents() {
@@ -640,7 +695,6 @@ function simulateDocUpload(e) {
   if (!file) return;
   document.getElementById('docUploadStatus').textContent = `Parsed file "${file.name}" successfully! 2 sample questions auto-imported.`;
   
-  // Auto add parsed sample questions from document
   window.tempBufferedQuestions = window.tempBufferedQuestions || [];
   window.tempBufferedQuestions.push({
     id: 'q_' + Date.now() + '_1',
@@ -729,6 +783,7 @@ function saveNewQuizToSystem() {
     description: description || 'Custom training module.',
     passPercentage,
     timeLimit,
+    isPublished: true,
     questions: window.tempBufferedQuestions
   };
 
@@ -804,6 +859,7 @@ function loadSampleData() {
       description: 'Core programming concepts, ES6 execution models, and state handling.',
       passPercentage: 60,
       timeLimit: 15,
+      isPublished: true,
       questions: [
         { id: 'q_0', type: 'mcq', question: 'Which keyword defines a constant variable in JavaScript?', options: ['var', 'let', 'const', 'static'], correctAnswer: 'const', marks: 1 },
         { id: 'q_1', type: 'short', question: 'What does DOM stand for?', options: [], correctAnswer: 'Document Object Model', marks: 1 }
