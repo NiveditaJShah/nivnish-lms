@@ -1,5 +1,5 @@
 /* ============================================================================
-   NivNish Training Hub LMS - Application Logic (Preview & Publish Toggle)
+   NivNish Training Hub LMS - Application Logic (Exact Reference Layout)
    ============================================================================ */
 
 let appState = {
@@ -103,7 +103,7 @@ function openForgotPassword() {
     alert('No account found with this email address.');
     return;
   }
-  const newPass = prompt('Enter your new secure password (must contain upper, lower, number, special character, min 8 chars):');
+  const newPass = prompt('Enter your new secure password (min 8 chars, uppercase, lowercase, number, special char):');
   if (!newPass) return;
   
   if (!validatePasswordStrength(newPass)) {
@@ -113,7 +113,7 @@ function openForgotPassword() {
 
   user.password = newPass;
   saveToStorage();
-  alert('Password updated successfully! You can now log in with your new password.');
+  alert('Password updated successfully! You can now log in.');
 }
 
 function handleRegister(e) {
@@ -129,7 +129,7 @@ function handleRegister(e) {
   }
 
   if (!validatePasswordStrength(password)) {
-    document.getElementById('registerMessage').textContent = 'Password is too short or missing required criteria. Check the rules above.';
+    document.getElementById('registerMessage').textContent = 'Password is too short or missing required criteria.';
     return;
   }
 
@@ -138,15 +138,7 @@ function handleRegister(e) {
     return;
   }
 
-  const newUser = { 
-    id: 'usr_' + Date.now(), 
-    name, 
-    email, 
-    phone, 
-    password, 
-    role: 'student' 
-  };
-  
+  const newUser = { id: 'usr_' + Date.now(), name, email, phone, password, role: 'student' };
   appState.users.push(newUser);
   appState.currentUser = newUser;
   saveToStorage();
@@ -170,28 +162,28 @@ function renderStudentQuizzes() {
   grid.innerHTML = '';
   
   // Only display published quizzes to students
-  const activeQuizzes = appState.quizzes.filter(q => q.isPublished !== false);
+  const activeQuizzes = appState.quizzes.filter(q => q.isPublished === true);
   
   if (activeQuizzes.length === 0) {
-    grid.innerHTML = '<p class="text-sm text-gray-500">No active training quizzes available at the moment.</p>';
+    grid.innerHTML = '<p class="text-sm text-gray-500">No active published quizzes available at the moment.</p>';
     return;
   }
 
   activeQuizzes.forEach(quiz => {
     const completed = appState.results.find(r => r.userId === appState.currentUser.id && r.quizId === quiz.id);
     const card = document.createElement('div');
-    card.className = 'bg-white rounded-lg p-4 border border-gray-200 shadow-sm space-y-3';
+    card.className = 'bg-white rounded-xl p-4 border border-gray-200 shadow-sm space-y-3';
     card.innerHTML = `
       <div class="flex justify-between items-start">
-        <h3 class="font-semibold text-base">${quiz.title}</h3>
+        <h3 class="font-bold text-base text-gray-900">${quiz.title}</h3>
         <span class="text-[11px] px-2 py-0.5 rounded font-bold ${completed ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
           ${completed ? 'Completed' : 'Available'}
         </span>
       </div>
       <p class="text-xs text-gray-500 leading-relaxed">${quiz.description || 'Enterprise training module.'}</p>
       <div class="flex items-center justify-between pt-2 border-t border-gray-100 text-xs">
-        <span class="text-gray-400">${quiz.questions.length} questions • ${quiz.timeLimit || 15} mins</span>
-        <button onclick="startQuiz('${quiz.id}')" class="px-3 py-1.5 rounded text-xs font-semibold ${completed ? 'bg-gray-200 text-gray-600 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}" ${completed ? 'disabled' : ''}>
+        <span class="text-gray-400 font-medium">${quiz.questions.length} questions • ${quiz.timeLimit || 15} mins</span>
+        <button onclick="startQuiz('${quiz.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold ${completed ? 'bg-gray-200 text-gray-600 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white transition'}" ${completed ? 'disabled' : ''}>
           ${completed ? 'Completed' : 'Start Quiz'}
         </button>
       </div>
@@ -231,34 +223,34 @@ function renderQuizRunner() {
   let inputHtml = '';
   const currentAns = quiz.answers[`q_${quiz.currentQuestion}`];
 
-  if (q.type === 'mcq') {
-    inputHtml = `<div class="space-y-2 pt-2">` + q.options.map(opt => `
-      <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
+  if (!q.type || q.type === 'mcq') {
+    inputHtml = `<div class="space-y-2 pt-2">` + (q.options || []).map(opt => `
+      <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 text-sm">
         <input type="radio" name="currentOpt" value="${opt}" ${currentAns === opt ? 'checked' : ''} onchange="saveCurrentAnswer('${opt}')" class="text-indigo-600" />
         <span>${opt}</span>
       </label>`).join('') + `</div>`;
   } else if (q.type === 'multi') {
     const selectedList = Array.isArray(currentAns) ? currentAns : [];
-    inputHtml = `<div class="space-y-2 pt-2">` + q.options.map(opt => `
-      <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
+    inputHtml = `<div class="space-y-2 pt-2">` + (q.options || []).map(opt => `
+      <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 text-sm">
         <input type="checkbox" value="${opt}" ${selectedList.includes(opt) ? 'checked' : ''} onchange="saveMultiAnswer(this)" class="text-indigo-600 rounded" />
         <span>${opt}</span>
       </label>`).join('') + `</div>`;
   } else if (q.type === 'short') {
-    inputHtml = `<div class="pt-2"><input type="text" placeholder="Type your short answer..." value="${currentAns || ''}" oninput="saveCurrentAnswer(this.value)" class="w-full p-3 rounded border border-gray-200 bg-gray-50 text-sm" /></div>`;
+    inputHtml = `<div class="pt-2"><input type="text" placeholder="Type your short answer..." value="${currentAns || ''}" oninput="saveCurrentAnswer(this.value)" class="w-full p-3 rounded-xl border border-gray-300 bg-gray-50/50 text-sm focus:bg-white focus:outline-none" /></div>`;
   } else if (q.type === 'long') {
-    inputHtml = `<div class="pt-2"><textarea rows="4" placeholder="Type your detailed answer..." oninput="saveCurrentAnswer(this.value)" class="w-full p-3 rounded border border-gray-200 bg-gray-50 text-sm">${currentAns || ''}</textarea></div>`;
+    inputHtml = `<div class="pt-2"><textarea rows="4" placeholder="Type your detailed answer..." oninput="saveCurrentAnswer(this.value)" class="w-full p-3 rounded-xl border border-gray-300 bg-gray-50/50 text-sm focus:bg-white focus:outline-none">${currentAns || ''}</textarea></div>`;
   } else if (q.type === 'file') {
-    inputHtml = `<div class="pt-2 space-y-2"><input type="file" onchange="saveFileUpload(this)" class="w-full p-2 border border-gray-200 rounded bg-gray-50 text-xs" /><div class="text-xs text-indigo-600 font-semibold">${currentAns ? 'File attached: ' + currentAns : ''}</div></div>`;
+    inputHtml = `<div class="pt-2 space-y-2"><input type="file" onchange="saveFileUpload(this)" class="w-full p-2 border border-gray-300 rounded-xl bg-gray-50 text-xs" /><div class="text-xs text-indigo-600 font-semibold">${currentAns ? 'File attached: ' + currentAns : ''}</div></div>`;
   }
 
   form.innerHTML = `
     <div class="space-y-3">
       <div class="flex justify-between items-center text-xs text-gray-500 font-semibold">
-        <span>Question ${quiz.currentQuestion + 1} of ${quiz.questions.length}</span>
-        <span class="uppercase tracking-wider px-2 py-0.5 bg-gray-100 rounded text-[10px]">${q.type}</span>
+        <span>Question ${quiz.currentQuestion + 1} of ${quiz.questions.length} (Points: ${q.marks || 1})</span>
+        <span class="uppercase tracking-wider px-2 py-0.5 bg-gray-100 rounded text-[10px]">${q.type || 'mcq'}</span>
       </div>
-      <div class="text-base font-medium text-gray-800">${q.question}</div>
+      <div class="text-base font-medium text-gray-900">${q.question}</div>
       ${inputHtml}
     </div>
   `;
@@ -337,7 +329,7 @@ function submitQuiz() {
   quiz.questions.forEach((q, i) => {
     maxScore += (q.marks || 1);
     const userAns = quiz.answers[`q_${i}`];
-    if (q.type === 'mcq' && userAns === q.correctAnswer) {
+    if ((!q.type || q.type === 'mcq') && userAns === q.correctAnswer) {
       score += (q.marks || 1);
     } else if (q.type === 'multi' && Array.isArray(userAns)) {
       const correctArr = Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer];
@@ -391,10 +383,10 @@ function loadStudentHistory() {
   }
   myResults.forEach(r => {
     const item = document.createElement('div');
-    item.className = 'p-4 rounded border border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-50';
+    item.className = 'p-4 rounded-xl border border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-50';
     item.innerHTML = `
       <div>
-        <div class="font-semibold text-sm">${r.quizTitle}</div>
+        <div class="font-bold text-sm text-gray-900">${r.quizTitle}</div>
         <div class="text-xs text-gray-500">Submitted: ${new Date(r.submittedAt).toLocaleDateString()}</div>
       </div>
       <div class="flex items-center gap-4">
@@ -403,8 +395,8 @@ function loadStudentHistory() {
           <div class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">${r.passed ? 'Passed' : 'Failed'}</div>
         </div>
         <div class="flex gap-2">
-          <button onclick="reviewSubmission('${r.id}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold">Review</button>
-          ${r.passed ? `<button onclick="viewCertificate('${r.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold">Certificate</button>` : ''}
+          <button onclick="reviewSubmission('${r.id}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition">Review</button>
+          ${r.passed ? `<button onclick="viewCertificate('${r.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition">Certificate</button>` : ''}
         </div>
       </div>
     `;
@@ -423,8 +415,8 @@ function reviewSubmission(resId) {
     r.questionsDetail.forEach((q, idx) => {
       const userAns = r.answersDetail[`q_${idx}`] || 'No Answer Provided';
       qReviewHtml += `
-        <div class="p-3 bg-gray-50 rounded border border-gray-200 space-y-1 text-left text-xs">
-          <div class="font-semibold text-gray-800">Q${idx + 1}: ${q.question}</div>
+        <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-1 text-left text-xs">
+          <div class="font-semibold text-gray-900">Q${idx + 1}: ${q.question}</div>
           <div class="text-indigo-600"><strong>Your Answer:</strong> ${Array.isArray(userAns) ? userAns.join(', ') : userAns}</div>
           <div class="text-emerald-700"><strong>Correct Answer:</strong> ${Array.isArray(q.correctAnswer) ? q.correctAnswer.join(', ') : (q.correctAnswer || 'Evaluated qualitatively')}</div>
         </div>
@@ -433,14 +425,14 @@ function reviewSubmission(resId) {
   }
 
   modal.innerHTML = `
-    <div class="bg-white rounded-lg max-w-2xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto relative text-gray-900 shadow-2xl">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto relative text-gray-900 shadow-xl">
       <div class="flex justify-between items-center border-b pb-3">
         <h2 class="text-lg font-bold">Review Submission: ${r.quizTitle}</h2>
-        <span class="text-xs font-bold px-2 py-1 rounded ${r.passed ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${r.percentage}% (${r.score}/${r.totalMarks})</span>
+        <span class="text-xs font-bold px-2.5 py-1 rounded-lg ${r.passed ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${r.percentage}% (${r.score}/${r.totalMarks})</span>
       </div>
       <div class="space-y-3">${qReviewHtml}</div>
       <div class="text-center pt-2">
-        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-700 text-white rounded text-xs font-semibold">Close Review</button>
+        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-800 text-white rounded-xl text-xs font-semibold hover:bg-gray-900 transition">Close Review</button>
       </div>
     </div>
   `;
@@ -453,8 +445,8 @@ function viewCertificate(resId) {
   const modal = document.createElement('div');
   modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4';
   modal.innerHTML = `
-    <div class="bg-white rounded-lg max-w-2xl w-full p-6 space-y-4 text-center relative text-gray-900 shadow-2xl">
-      <div class="certificate">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 text-center relative text-gray-900 shadow-xl certificate">
+      <div class="p-8 border-4 border-indigo-100 rounded-xl bg-gradient-to-b from-white to-indigo-50/20">
         <div class="text-xs tracking-widest text-indigo-600 font-bold mb-2 uppercase">Certificate of Achievement</div>
         <h2 class="text-2xl font-black mb-1">NivNish Training Hub</h2>
         <div class="text-[11px] text-gray-500 mb-6">Pure For Sure LMS Verification Engine</div>
@@ -462,14 +454,14 @@ function viewCertificate(resId) {
         <p class="text-xl font-bold my-2 text-indigo-900">${r.userName}</p>
         <p class="text-xs text-gray-600">for successfully passing the assessment module</p>
         <p class="text-lg font-semibold my-2">${r.quizTitle}</p>
-        <div class="mt-6 pt-4 border-t border-gray-200 flex justify-between text-xs text-gray-500">
+        <div class="mt-8 pt-4 border-t border-gray-200 flex justify-between text-xs text-gray-500 font-medium">
           <span>Score: ${r.percentage}%</span>
           <span>Date: ${new Date(r.submittedAt).toLocaleDateString()}</span>
         </div>
       </div>
       <div class="flex justify-center gap-3 pt-2">
-        <button onclick="window.print()" class="px-4 py-2 bg-indigo-600 text-white rounded text-xs font-semibold">Print Certificate</button>
-        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded text-xs font-semibold">Close</button>
+        <button onclick="window.print()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">Print Certificate</button>
+        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-300 transition">Close</button>
       </div>
     </div>
   `;
@@ -477,35 +469,49 @@ function viewCertificate(resId) {
 }
 
 function loadAdminDashboard() {
-  renderAdminQuizzes();
+  renderAdminQuizzesTable();
   renderAdminStudents();
   renderAdminResults();
-  renderAnalytics();
 }
 
-function renderAdminQuizzes() {
-  const container = document.getElementById('adminQuizzes');
-  if (!container) return;
-  container.innerHTML = '';
+function renderAdminQuizzesTable() {
+  const tbody = document.getElementById('adminQuizzesTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (appState.quizzes.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-gray-500 text-sm">No quizzes created yet. Click "New quiz" to get started.</td></tr>`;
+    return;
+  }
+
   appState.quizzes.forEach(q => {
-    const isPublished = q.isPublished !== false;
-    const div = document.createElement('div');
-    div.className = 'p-3 rounded border border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs';
-    div.innerHTML = `
-      <div>
-        <span class="font-semibold">${q.title}</span> • <span class="text-gray-400">${q.questions.length} questions • ${q.timeLimit || 15} mins</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <label class="flex items-center gap-1 cursor-pointer select-none">
-          <span class="text-[11px] font-medium text-gray-600">Publish:</span>
-          <input type="checkbox" ${isPublished ? 'checked' : ''} onchange="togglePublishQuiz('${q.id}', this.checked)" class="rounded text-indigo-600 cursor-pointer" />
-        </label>
-        <button onclick="previewQuiz('${q.id}')" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded font-semibold hover:bg-emerald-200">Preview</button>
-        <button onclick="copyQuiz('${q.id}')" class="px-2 py-1 bg-indigo-100 text-indigo-700 rounded font-semibold hover:bg-indigo-200">Copy</button>
-        <button onclick="deleteQuiz('${q.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Delete</button>
-      </div>
+    const isPublished = q.isPublished === true;
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-gray-50/80 transition';
+    tr.innerHTML = `
+      <td class="p-4 pl-6 font-semibold text-gray-900">
+        <div>${q.title}</div>
+        <div class="text-xs text-gray-500 font-normal">${q.description || ''}</div>
+      </td>
+      <td class="p-4">
+        <div class="flex items-center gap-2">
+          <input type="checkbox" ${isPublished ? 'checked' : ''} onchange="togglePublishQuiz('${q.id}', this.checked)" class="w-4 h-4 text-indigo-600 rounded cursor-pointer" />
+          <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${isPublished ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}">
+            ${isPublished ? 'Published' : 'Draft'}
+          </span>
+        </div>
+      </td>
+      <td class="p-4 text-right pr-6">
+        <div class="flex items-center justify-end gap-1.5">
+          <button onclick="openQuestionsModal('${q.id}')" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold text-xs transition">Questions</button>
+          <button onclick="previewQuiz('${q.id}')" class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs transition" title="Preview"><i class="fas fa-eye"></i></button>
+          <button onclick="openEditQuizModal('${q.id}')" class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs transition" title="Edit / Configure"><i class="fas fa-pen"></i></button>
+          <button onclick="copyQuiz('${q.id}')" class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs transition" title="Copy"><i class="fas fa-copy"></i></button>
+          <button onclick="deleteQuiz('${q.id}')" class="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs transition" title="Delete"><i class="fas fa-trash"></i></button>
+        </div>
+      </td>
     `;
-    container.appendChild(div);
+    tbody.appendChild(tr);
   });
 }
 
@@ -514,7 +520,260 @@ function togglePublishQuiz(quizId, status) {
   if (quiz) {
     quiz.isPublished = status;
     saveToStorage();
+    renderAdminQuizzesTable();
   }
+}
+
+function openCreateQuizModal() {
+  openQuizConfigModal(null);
+}
+
+function openEditQuizModal(quizId) {
+  const quiz = appState.quizzes.find(q => q.id === quizId);
+  if (quiz) openQuizConfigModal(quiz);
+}
+
+function openQuizConfigModal(quiz) {
+  const isEdit = !!quiz;
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto';
+  modal.innerHTML = `
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto relative text-gray-900 shadow-xl">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h2 class="text-xl font-bold">${isEdit ? 'Edit Quiz Settings' : 'New Quiz'}</h2>
+        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-xmark text-lg"></i></button>
+      </div>
+      
+      <form onsubmit="saveQuizConfig(event, '${isEdit ? quiz.id : ''}')" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold uppercase tracking-wider text-gray-600 mb-1">Title</label>
+          <input type="text" id="cfgTitle" required value="${isEdit ? quiz.title : ''}" placeholder="e.g. Month_1_Quiz" class="w-full p-2.5 border rounded-xl bg-gray-50 text-sm focus:bg-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-semibold uppercase tracking-wider text-gray-600 mb-1">Description</label>
+          <textarea id="cfgDesc" rows="2" placeholder="Brief summary of the module" class="w-full p-2.5 border rounded-xl bg-gray-50 text-sm focus:bg-white focus:outline-none">${isEdit ? (quiz.description || '') : ''}</textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold uppercase tracking-wider text-gray-600 mb-1">Timer (Minutes)</label>
+            <input type="number" id="cfgTimer" value="${isEdit ? (quiz.timeLimit || 15) : 15}" class="w-full p-2.5 border rounded-xl bg-gray-50 text-sm focus:bg-white focus:outline-none" />
+          </div>
+          <div>
+            <label class="block font-semibold uppercase tracking-wider text-gray-600 mb-1">Pass Percentage (%)</label>
+            <input type="number" id="cfgPass" value="${isEdit ? (quiz.passPercentage || 60) : 60}" class="w-full p-2.5 border rounded-xl bg-gray-50 text-sm focus:bg-white focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t">
+          <button type="button" onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-semibold text-xs hover:bg-gray-200 transition">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-semibold text-xs hover:bg-indigo-700 transition">Save Quiz</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function saveQuizConfig(e, quizId) {
+  e.preventDefault();
+  const title = document.getElementById('cfgTitle').value.trim();
+  const description = document.getElementById('cfgDesc').value.trim();
+  const timeLimit = parseInt(document.getElementById('cfgTimer').value) || 15;
+  const passPercentage = parseInt(document.getElementById('cfgPass').value) || 60;
+
+  if (quizId) {
+    const quiz = appState.quizzes.find(q => q.id === quizId);
+    if (quiz) {
+      quiz.title = title;
+      quiz.description = description;
+      quiz.timeLimit = timeLimit;
+      quiz.passPercentage = passPercentage;
+    }
+  } else {
+    const newQuiz = {
+      id: 'quiz_' + Date.now(),
+      title,
+      description,
+      timeLimit,
+      passPercentage,
+      isPublished: false,
+      questions: []
+    };
+    appState.quizzes.push(newQuiz);
+  }
+
+  saveToStorage();
+  document.querySelector('.fixed').remove();
+  renderAdminQuizzesTable();
+}
+
+function openQuestionsModal(quizId) {
+  const quiz = appState.quizzes.find(q => q.id === quizId);
+  if (!quiz) return;
+
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto';
+  
+  function renderQuestionsListHtml() {
+    if (!quiz.questions || quiz.questions.length === 0) {
+      return `<div class="text-center py-8 text-gray-400 text-sm">No questions yet.</div>`;
+    }
+    return quiz.questions.map((q, idx) => `
+      <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 flex justify-between items-start text-xs">
+        <div>
+          <span class="font-bold text-gray-900">Q${idx + 1} (${q.type || 'mcq'}):</span> ${q.question}
+          <div class="text-gray-500 mt-1">Options: ${(q.options || []).join(', ') || 'N/A'} | Correct: ${Array.isArray(q.correctAnswer) ? q.correctAnswer.join(', ') : (q.correctAnswer || 'N/A')}</div>
+        </div>
+        <button onclick="deleteQuestion('${quiz.id}', '${q.id}')" class="text-rose-600 hover:text-rose-800 p-1"><i class="fas fa-trash"></i></button>
+      </div>
+    `).join('');
+  }
+
+  modal.innerHTML = `
+    <div id="questionsModalContainer" class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto relative text-gray-900 shadow-xl">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h2 class="text-lg font-bold">Questions — ${quiz.title}</h2>
+        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-xmark text-lg"></i></button>
+      </div>
+
+      <div id="qListContainer" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+        ${renderQuestionsListHtml()}
+      </div>
+
+      <div class="flex flex-wrap gap-3 pt-3 border-t">
+        <button onclick="openNewQuestionModal('${quiz.id}')" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition">
+          <i class="fas fa-plus"></i> Add question
+        </button>
+        <button onclick="document.getElementById('importFile').click()" class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition">
+          <i class="fas fa-file-arrow-up"></i> Import from file
+        </button>
+        <input id="importFile" type="file" accept=".pdf,.doc,.docx,.txt" class="hidden" onchange="importQuestionsFromFile(event, '${quiz.id}')" />
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function openNewQuestionModal(quizId) {
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto';
+  modal.innerHTML = `
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto relative text-gray-900 shadow-xl">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h2 class="text-lg font-bold">New question</h2>
+        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-xmark text-lg"></i></button>
+      </div>
+
+      <form onsubmit="saveNewQuestion(event, '${quizId}')" class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold uppercase tracking-wider text-gray-600 mb-1">Type</label>
+            <select id="nqType" onchange="toggleNQOptions(this.value)" class="w-full p-2.5 border rounded-xl bg-gray-50 text-sm focus:bg-white focus:outline-none">
+              <option value="mcq">Multiple choice (single)</option>
+              <option value="multi">Multiple choice (checkboxes)</option>
+              <option value="short">Short Answer</option>
+              <option value="long">Long Answer</option>
+              <option value="file">File Upload</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold uppercase tracking-wider text-gray-600 mb-1">Points</label>
+            <input type="number" id="nqPoints" value="1" min="1" class="w-full p-2.5 border rounded-xl bg-gray-50 text-sm focus:bg-white focus:outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold uppercase tracking-wider text-gray-600 mb-1">Question</label>
+          <textarea id="nqText" required rows="3" placeholder="Type your question here..." class="w-full p-2.5 border rounded-xl bg-gray-50 text-sm focus:bg-white focus:outline-none"></textarea>
+        </div>
+
+        <div id="nqOptionsArea">
+          <label class="block font-semibold uppercase tracking-wider text-gray-600 mb-1">Options (Comma separated)</label>
+          <input type="text" id="nqOptions" placeholder="Option 1, Option 2, Option 3" class="w-full p-2.5 border rounded-xl bg-gray-50 text-sm focus:bg-white focus:outline-none" />
+        </div>
+
+        <div>
+          <label class="block font-semibold uppercase tracking-wider text-gray-600 mb-1">Correct Answer</label>
+          <input type="text" id="nqCorrect" placeholder="Exact correct option" class="w-full p-2.5 border rounded-xl bg-gray-50 text-sm focus:bg-white focus:outline-none" />
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t">
+          <button type="button" onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-semibold text-xs hover:bg-gray-200 transition">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-semibold text-xs hover:bg-indigo-700 transition">Save</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function toggleNQOptions(type) {
+  const area = document.getElementById('nqOptionsArea');
+  if (['short', 'long', 'file'].includes(type)) {
+    area.style.display = 'none';
+  } else {
+    area.style.display = 'block';
+  }
+}
+
+function saveNewQuestion(e, quizId) {
+  e.preventDefault();
+  const quiz = appState.quizzes.find(q => q.id === quizId);
+  if (!quiz) return;
+
+  const type = document.getElementById('nqType').value;
+  const marks = parseInt(document.getElementById('nqPoints').value) || 1;
+  const question = document.getElementById('nqText').value.trim();
+  const optionsRaw = document.getElementById('nqOptions').value;
+  const correctAnswer = document.getElementById('nqCorrect').value.trim();
+
+  let options = [];
+  if (!['short', 'long', 'file'].includes(type)) {
+    options = optionsRaw.split(',').map(o => o.trim()).filter(Boolean);
+  }
+
+  const newQ = {
+    id: 'q_' + Date.now(),
+    type,
+    question,
+    options,
+    correctAnswer,
+    marks
+  };
+
+  quiz.questions.push(newQ);
+  saveToStorage();
+  document.querySelector('.fixed').remove();
+  openQuestionsModal(quizId);
+}
+
+function deleteQuestion(quizId, qId) {
+  const quiz = appState.quizzes.find(q => q.id === quizId);
+  if (!quiz) return;
+  quiz.questions = quiz.questions.filter(q => q.id !== qId);
+  saveToStorage();
+  document.querySelector('.fixed').remove();
+  openQuestionsModal(quizId);
+}
+
+function importQuestionsFromFile(e, quizId) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const quiz = appState.quizzes.find(q => q.id === quizId);
+  if (!quiz) return;
+
+  quiz.questions.push({
+    id: 'q_' + Date.now() + '_1',
+    type: 'mcq',
+    question: `[Imported from ${file.name}] Sample Assessment Question 1`,
+    options: ['Choice A', 'Choice B', 'Choice C', 'Choice D'],
+    correctAnswer: 'Choice A',
+    marks: 1
+  });
+  saveToStorage();
+  document.querySelector('.fixed').remove();
+  openQuestionsModal(quizId);
+  alert(`File "${file.name}" successfully imported!`);
 }
 
 function previewQuiz(quizId) {
@@ -524,274 +783,34 @@ function previewQuiz(quizId) {
   modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto';
   
   let qListHtml = '';
-  quiz.questions.forEach((q, idx) => {
-    qListHtml += `
-      <div class="p-3 bg-gray-50 rounded border border-gray-200 space-y-1 text-left text-xs">
-        <div class="font-semibold text-gray-800">Q${idx + 1} (${q.type}): ${q.question}</div>
-        ${q.options && q.options.length ? `<div class="text-gray-600"><strong>Options:</strong> ${q.options.join(', ')}</div>` : ''}
-        <div class="text-emerald-700"><strong>Correct Answer:</strong> ${Array.isArray(q.correctAnswer) ? q.correctAnswer.join(', ') : (q.correctAnswer || 'Qualitative')}</div>
-      </div>
-    `;
-  });
+  if (!quiz.questions || quiz.questions.length === 0) {
+    qListHtml = '<p class="text-gray-400 text-sm text-center py-4">No questions added in this quiz yet.</p>';
+  } else {
+    quiz.questions.forEach((q, idx) => {
+      qListHtml += `
+        <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-1 text-left text-xs">
+          <div class="font-bold text-gray-900">Q${idx + 1} (${q.type || 'mcq'}): ${q.question}</div>
+          ${q.options && q.options.length ? `<div class="text-gray-600"><strong>Options:</strong> ${q.options.join(', ')}</div>` : ''}
+          <div class="text-emerald-700"><strong>Correct Answer:</strong> ${Array.isArray(q.correctAnswer) ? q.correctAnswer.join(', ') : (q.correctAnswer || 'Qualitative')}</div>
+        </div>
+      `;
+    });
+  }
 
   modal.innerHTML = `
-    <div class="bg-white rounded-lg max-w-2xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto relative text-gray-900 shadow-2xl">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto relative text-gray-900 shadow-xl">
       <div class="flex justify-between items-center border-b pb-3">
         <h2 class="text-lg font-bold">Quiz Preview: ${quiz.title}</h2>
-        <span class="text-xs text-gray-500">${quiz.questions.length} Questions • ${quiz.timeLimit || 15} mins</span>
+        <span class="text-xs text-gray-500 font-medium">${quiz.questions.length} Questions • ${quiz.timeLimit || 15} mins</span>
       </div>
       <p class="text-xs text-gray-600">${quiz.description || ''}</p>
       <div class="space-y-3">${qListHtml}</div>
       <div class="text-center pt-2">
-        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-700 text-white rounded text-xs font-semibold">Close Preview</button>
+        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-800 text-white rounded-xl text-xs font-semibold hover:bg-gray-900 transition">Close Preview</button>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
-}
-
-function renderAdminStudents() {
-  const container = document.getElementById('adminStudents');
-  if (!container) return;
-  container.innerHTML = '';
-  appState.users.filter(u => u.role === 'student').forEach(s => {
-    const div = document.createElement('div');
-    div.className = 'p-3 rounded border border-gray-200 flex justify-between items-center text-xs';
-    div.innerHTML = `<div><span class="font-semibold">${s.name}</span> (${s.email}${s.phone ? ' - ' + s.phone : ''})</div><button onclick="deleteStudent('${s.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Remove</button>`;
-    container.appendChild(div);
-  });
-}
-
-function renderAdminResults() {
-  const container = document.getElementById('adminResults');
-  if (!container) return;
-  container.innerHTML = '';
-  appState.results.forEach(r => {
-    const div = document.createElement('div');
-    div.className = 'p-3 rounded border border-gray-200 flex justify-between items-center text-xs';
-    div.innerHTML = `
-      <div><span class="font-semibold">${r.userName}</span> tested on <em>${r.quizTitle}</em> — <strong class="${r.passed ? 'text-emerald-600' : 'text-rose-600'}">${r.percentage}%</strong></div>
-      <div class="flex gap-2">
-        <button onclick="reviewSubmission('${r.id}')" class="px-2 py-1 bg-indigo-600 text-white rounded font-semibold">Review</button>
-        <button onclick="deleteResult('${r.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Delete</button>
-      </div>
-    `;
-    container.appendChild(div);
-  });
-}
-
-function renderAnalytics() {
-  const canvas = document.getElementById('gradesChart');
-  if (!canvas) return;
-  const passedCount = appState.results.filter(r => r.passed).length;
-  const failedCount = appState.results.filter(r => !r.passed).length;
-  if (window.myChartInstance) window.myChartInstance.destroy();
-  window.myChartInstance = new Chart(canvas.getContext('2d'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Passed', 'Failed'],
-      datasets: [{ data: [passedCount, failedCount], backgroundColor: ['#10b981', '#f43f5e'] }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-}
-
-function openCreateQuizModal() {
-  const modal = document.createElement('div');
-  modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto';
-  modal.innerHTML = `
-    <div class="bg-white rounded-lg max-w-xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto relative text-gray-900 shadow-2xl">
-      <h2 class="text-xl font-bold border-b pb-2">Create New Quiz Module</h2>
-      
-      <div class="space-y-3 text-xs">
-        <div>
-          <label class="block font-semibold">Quiz Title</label>
-          <input type="text" id="newQuizTitle" placeholder="e.g., Advanced Data Analytics" class="w-full mt-1 p-2 border rounded bg-gray-50" />
-        </div>
-        <div>
-          <label class="block font-semibold">Description</label>
-          <input type="text" id="newQuizDesc" placeholder="Brief summary of the module" class="w-full mt-1 p-2 border rounded bg-gray-50" />
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block font-semibold">Timer (Minutes)</label>
-            <input type="number" id="newQuizTimer" value="15" class="w-full mt-1 p-2 border rounded bg-gray-50" />
-          </div>
-          <div>
-            <label class="block font-semibold">Pass Percentage (%)</label>
-            <input type="number" id="newQuizPass" value="60" class="w-full mt-1 p-2 border rounded bg-gray-50" />
-          </div>
-        </div>
-
-        <div class="pt-2 border-t">
-          <label class="block font-semibold mb-1">Upload Document (PDF / Word) to Import Questions</label>
-          <input type="file" id="quizDocFile" accept=".pdf,.doc,.docx,.txt" onchange="simulateDocUpload(event)" class="w-full p-2 border rounded bg-gray-50" />
-          <div id="docUploadStatus" class="text-[11px] text-emerald-600 mt-1 font-semibold"></div>
-        </div>
-
-        <div class="pt-2 border-t space-y-2">
-          <div class="font-semibold text-sm">Add Question Manually</div>
-          <div>
-            <label class="block font-medium">Question Text</label>
-            <input type="text" id="manualQText" placeholder="Enter question..." class="w-full mt-1 p-2 border rounded bg-gray-50" />
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block font-medium">Question Type</label>
-              <select id="manualQType" onchange="toggleQTypeOptions(this.value)" class="w-full mt-1 p-2 border rounded bg-gray-50">
-                <option value="mcq">MCQ (Single Answer)</option>
-                <option value="multi">Multiple Answers (Checkboxes)</option>
-                <option value="short">Short Answer</option>
-                <option value="long">Long Answer</option>
-                <option value="file">File Upload</option>
-              </select>
-            </div>
-            <div>
-              <label class="block font-medium">Marks</label>
-              <input type="number" id="manualQMarks" value="1" class="w-full mt-1 p-2 border rounded bg-gray-50" />
-            </div>
-          </div>
-          
-          <div id="optionsContainer">
-            <label class="block font-medium">Options (Comma separated for MCQ/Multi)</label>
-            <input type="text" id="manualQOptions" placeholder="Option A, Option B, Option C, Option D" class="w-full mt-1 p-2 border rounded bg-gray-50" />
-          </div>
-
-          <div>
-            <label class="block font-medium">Correct Answer</label>
-            <input type="text" id="manualQCorrect" placeholder="Exact matching correct answer" class="w-full mt-1 p-2 border rounded bg-gray-50" />
-          </div>
-
-          <button type="button" onclick="addManualQuestionToBuffer()" class="w-full py-1.5 bg-gray-800 text-white rounded font-semibold hover:bg-gray-700">+ Add Question to Buffer</button>
-        </div>
-
-        <div class="pt-2 border-t">
-          <div class="font-semibold">Buffered Questions (<span id="bufferedCount">0</span>)</div>
-          <div id="bufferedList" class="space-y-1 max-h-32 overflow-y-auto mt-1 text-[11px] text-gray-600"></div>
-        </div>
-      </div>
-
-      <div class="flex justify-end gap-2 pt-2 border-t">
-        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-semibold">Cancel</button>
-        <button onclick="saveNewQuizToSystem()" class="px-4 py-2 bg-indigo-600 text-white rounded font-semibold">Save & Publish Quiz</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  window.tempBufferedQuestions = [];
-}
-
-function toggleQTypeOptions(type) {
-  const container = document.getElementById('optionsContainer');
-  if (['short', 'long', 'file'].includes(type)) {
-    container.style.display = 'none';
-  } else {
-    container.style.display = 'block';
-  }
-}
-
-function simulateDocUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  document.getElementById('docUploadStatus').textContent = `Parsed file "${file.name}" successfully! 2 sample questions auto-imported.`;
-  
-  window.tempBufferedQuestions = window.tempBufferedQuestions || [];
-  window.tempBufferedQuestions.push({
-    id: 'q_' + Date.now() + '_1',
-    type: 'mcq',
-    question: `[Imported from ${file.name}] What is the key focus of this training module?`,
-    options: ['Quality Assurance', 'Speed reduction', 'Skipping steps', 'None'],
-    correctAnswer: 'Quality Assurance',
-    marks: 1
-  });
-  window.tempBufferedQuestions.push({
-    id: 'q_' + Date.now() + '_2',
-    type: 'short',
-    question: `[Imported from ${file.name}] State one core takeaway in your own words.`,
-    options: [],
-    correctAnswer: '',
-    marks: 1
-  });
-  document.getElementById('bufferedCount').textContent = window.tempBufferedQuestions.length;
-  renderBufferedList();
-}
-
-function addManualQuestionToBuffer() {
-  const question = document.getElementById('manualQText').value.trim();
-  const type = document.getElementById('manualQType').value;
-  const marks = parseInt(document.getElementById('manualQMarks').value) || 1;
-  const optionsRaw = document.getElementById('manualQOptions').value;
-  const correctAnswer = document.getElementById('manualQCorrect').value.trim();
-
-  if (!question) {
-    alert('Please enter question text.');
-    return;
-  }
-
-  let options = [];
-  if (!['short', 'long', 'file'].includes(type)) {
-    options = optionsRaw.split(',').map(o => o.trim()).filter(Boolean);
-  }
-
-  window.tempBufferedQuestions = window.tempBufferedQuestions || [];
-  window.tempBufferedQuestions.push({
-    id: 'q_' + Date.now(),
-    type,
-    question,
-    options,
-    correctAnswer,
-    marks
-  });
-
-  document.getElementById('manualQText').value = '';
-  document.getElementById('manualQOptions').value = '';
-  document.getElementById('manualQCorrect').value = '';
-  document.getElementById('bufferedCount').textContent = window.tempBufferedQuestions.length;
-  renderBufferedList();
-}
-
-function renderBufferedList() {
-  const list = document.getElementById('bufferedList');
-  if (!list) return;
-  list.innerHTML = '';
-  window.tempBufferedQuestions.forEach((q, idx) => {
-    const div = document.createElement('div');
-    div.className = 'p-1.5 bg-gray-100 rounded flex justify-between items-center';
-    div.innerHTML = `<span>${idx + 1}. (${q.type}) ${q.question}</span>`;
-    list.appendChild(div);
-  });
-}
-
-function saveNewQuizToSystem() {
-  const title = document.getElementById('newQuizTitle').value.trim();
-  const description = document.getElementById('newQuizDesc').value.trim();
-  const timeLimit = parseInt(document.getElementById('newQuizTimer').value) || 15;
-  const passPercentage = parseInt(document.getElementById('newQuizPass').value) || 60;
-
-  if (!title) {
-    alert('Please enter a quiz title.');
-    return;
-  }
-  if (!window.tempBufferedQuestions || window.tempBufferedQuestions.length === 0) {
-    alert('Please add at least one question to the quiz.');
-    return;
-  }
-
-  const newQuiz = {
-    id: 'quiz_' + Date.now(),
-    title,
-    description: description || 'Custom training module.',
-    passPercentage,
-    timeLimit,
-    isPublished: true,
-    questions: window.tempBufferedQuestions
-  };
-
-  appState.quizzes.push(newQuiz);
-  saveToStorage();
-  document.querySelector('.fixed').remove();
-  loadAdminDashboard();
-  alert('Quiz successfully created and published!');
 }
 
 function copyQuiz(quizId) {
@@ -800,38 +819,67 @@ function copyQuiz(quizId) {
   const copiedQuiz = {
     ...quiz,
     id: 'quiz_' + Date.now(),
-    title: `${quiz.title} (Copy)`
+    title: `${quiz.title} (Copy)`,
+    isPublished: false
   };
   appState.quizzes.push(copiedQuiz);
   saveToStorage();
-  loadAdminDashboard();
-  alert('Quiz duplicated successfully!');
+  renderAdminQuizzesTable();
+  alert('Quiz duplicated successfully as draft!');
 }
 
 function deleteQuiz(id) {
-  appState.quizzes = appState.quizzes.filter(q => q.id !== id);
-  saveToStorage();
-  loadAdminDashboard();
+  if (confirm('Are you sure you want to delete this quiz?')) {
+    appState.quizzes = appState.quizzes.filter(q => q.id !== id);
+    saveToStorage();
+    renderAdminQuizzesTable();
+  }
+}
+
+function renderAdminStudents() {
+  const container = document.getElementById('adminStudents');
+  if (!container) return;
+  container.innerHTML = '';
+  appState.users.filter(u => u.role === 'student').forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'p-3 rounded-xl border border-gray-200 flex justify-between items-center text-xs bg-gray-50/50';
+    div.innerHTML = `<div><span class="font-bold text-gray-900">${s.name}</span> (${s.email}${s.phone ? ' - ' + s.phone : ''})</div><button onclick="deleteStudent('${s.id}')" class="px-2 py-1 bg-rose-50 text-rose-600 rounded-lg font-semibold hover:bg-rose-100 transition">Remove</button>`;
+    container.appendChild(div);
+  });
 }
 
 function deleteStudent(id) {
   appState.users = appState.users.filter(u => u.id !== id);
   saveToStorage();
-  loadAdminDashboard();
+  renderAdminStudents();
+}
+
+function renderAdminResults() {
+  const container = document.getElementById('adminResults');
+  if (!container) return;
+  container.innerHTML = '';
+  if (appState.results.length === 0) {
+    container.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">No student submissions recorded yet.</p>';
+    return;
+  }
+  appState.results.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'p-3 rounded-xl border border-gray-200 flex justify-between items-center text-xs bg-gray-50/50';
+    div.innerHTML = `
+      <div><span class="font-bold text-gray-900">${r.userName}</span> tested on <em>${r.quizTitle}</em> — <strong class="${r.passed ? 'text-emerald-600' : 'text-rose-600'}">${r.percentage}%</strong></div>
+      <div class="flex gap-1.5">
+        <button onclick="reviewSubmission('${r.id}')" class="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition">Review</button>
+        <button onclick="deleteResult('${r.id}')" class="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-lg font-semibold hover:bg-rose-100 transition">Delete</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
 }
 
 function deleteResult(id) {
   appState.results = appState.results.filter(r => r.id !== id);
   saveToStorage();
-  loadAdminDashboard();
-}
-
-function handleBulkImport(e) {
-  alert('Simulated CSV bulk student import successful!');
-}
-
-function sendReminderEmails() {
-  alert('Reminder emails successfully dispatched to students with pending modules.');
+  renderAdminResults();
 }
 
 function saveToStorage() {
@@ -855,14 +903,13 @@ function loadSampleData() {
   if (appState.quizzes.length === 0) {
     appState.quizzes.push({
       id: 'quiz_01',
-      title: 'JavaScript & Systems Fundamentals',
-      description: 'Core programming concepts, ES6 execution models, and state handling.',
+      title: 'Month_1_Quiz',
+      description: 'Excel Basics Quiz',
       passPercentage: 60,
       timeLimit: 15,
-      isPublished: true,
+      isPublished: false,
       questions: [
-        { id: 'q_0', type: 'mcq', question: 'Which keyword defines a constant variable in JavaScript?', options: ['var', 'let', 'const', 'static'], correctAnswer: 'const', marks: 1 },
-        { id: 'q_1', type: 'short', question: 'What does DOM stand for?', options: [], correctAnswer: 'Document Object Model', marks: 1 }
+        { id: 'q_0', type: 'mcq', question: 'Which shortcut selects all cells in Excel?', options: ['Ctrl + A', 'Ctrl + C', 'Ctrl + V', 'Ctrl + S'], correctAnswer: 'Ctrl + A', marks: 1 }
       ]
     });
   }
