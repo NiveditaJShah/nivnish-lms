@@ -1,32 +1,32 @@
 /* ============================================================================
-   NivNish Training Hub LMS - Custom Stylesheet
+   NivNish Training Hub LMS - Custom Styling & Polish
    ============================================================================ */
 
-:root {
-  --brand: #4f46e5;
-  --muted: #6b7280;
+body {
+  background-color: #f8fafc;
+  color: #1e293b;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-html, body {
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-}
-
-.certificate {
-  width: 100%;
-  max-width: 800px;
-  padding: 40px;
-  border: 12px double #4f46e5;
-  background: white;
-  color: #111827;
-  margin: 0 auto;
-}
-
+/* Certificate Print Formatting */
 @media print {
-  body * { visibility: hidden; }
-  .certificate, .certificate * { visibility: visible; }
-  .certificate { position: absolute; left: 0; top: 0; width: 100%; border: 8px double #000; }
+  body * {
+    visibility: hidden;
+  }
+  .certificate, .certificate * {
+    visibility: visible;
+  }
+  .certificate {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+  }
 }
 
-.hidden { display: none !important; }
-section { display: block; }
-main > section { min-height: 50vh; }
+/* Smooth toggle switches */
+input[type="checkbox"] {
+  accent-color: #4f46e5;
+}
