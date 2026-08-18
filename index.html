@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>NivNish Training Hub — Pure For Sure LMS</title>
 
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Tailwind CSS CDN -->
   <script>
     tailwind = window.tailwind || {};
     tailwind.config = {
@@ -21,207 +19,185 @@
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- FontAwesome (free CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
 
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- App styles -->
   <link rel="stylesheet" href="styles.css" />
 
   <meta name="description" content="NivNish Training Hub - Pure For Sure LMS" />
 </head>
-<body class="bg-gray-50 text-gray-800 min-h-screen">
-  <!-- Header -->
-  <header class="bg-white shadow sticky top-0 z-30">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('home')">
-          <img src="./NivNish_Training_Logo-removebg-preview.png" alt="NivNish Training Hub" class="h-14 w-auto object-contain" />
-          <div>
-            <span class="text-lg sm:text-xl font-semibold">NivNish Training Hub</span>
-            <div class="text-xs text-gray-500">Pure For Sure LMS</div>
-          </div>
-        </div>
+<body class="bg-gray-50 text-gray-800 min-h-screen font-sans">
+  
+  <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8" id="appRoot">
 
-        <div class="flex items-center gap-2">
-          <nav class="flex items-center gap-1">
-            <button type="button" onclick="navigateTo('home')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100">Home</button>
-            <button type="button" onclick="navigateTo('auth')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100">Login</button>
-            <button type="button" onclick="navigateTo('dashboard')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100">Dashboard</button>
-            <button type="button" onclick="navigateTo('admin')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100">Admin</button>
-          </nav>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Container -->
-  <main class="max-w-6xl mx-auto p-4" id="appRoot">
-
-    <!-- HOME / LANDING VIEW -->
     <section id="view-home" class="">
-      <div class="max-w-4xl mx-auto bg-white rounded-lg shadow p-8 text-center space-y-6">
-        <h1 class="text-3xl font-bold">Welcome to NivNish Training Hub</h1>
+      <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center space-y-6">
+        <div class="flex justify-center">
+          <img src="./NivNish_Training_Logo-removebg-preview.png" alt="NivNish Training Hub" class="h-16 w-auto object-contain" />
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900">Welcome to NivNish Training Hub</h1>
         <p class="text-gray-600">Pure For Sure Learning Management System. Explore modules, assessments, and certifications below:</p>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-          <div class="p-6 border border-gray-200 rounded-lg bg-indigo-50/50 space-y-3">
-            <h2 class="text-xl font-semibold">Admin Portal</h2>
-            <p class="text-sm text-gray-600">Create quizzes, manage student registrations, and view cohort analytics.</p>
-            <button onclick="navigateTo('admin')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-semibold">Admin Access</button>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left pt-4">
+          <div class="p-6 border border-gray-200 rounded-xl bg-indigo-50/40 space-y-3">
+            <h2 class="text-xl font-semibold text-indigo-900">Admin Portal</h2>
+            <p class="text-sm text-gray-600">Manage quizzes, configure drafts/published states, and view cohort analytics.</p>
+            <button onclick="navigateTo('admin')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition">Admin Access</button>
           </div>
 
-          <div class="p-6 border border-gray-200 rounded-lg bg-green-50/50 space-y-3">
-            <h2 class="text-xl font-semibold">Student Portal</h2>
+          <div class="p-6 border border-gray-200 rounded-xl bg-emerald-50/40 space-y-3">
+            <h2 class="text-xl font-semibold text-emerald-900">Student Portal</h2>
             <p class="text-sm text-gray-600">Take assigned quizzes, track past scores, and earn verified printable certificates.</p>
             <div class="flex gap-3 pt-1">
-              <button onclick="navigateTo('auth')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-semibold">Student Login</button>
+              <button onclick="navigateTo('auth')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition">Student Login</button>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- AUTH VIEW (STUDENT LOGIN / REGISTER) -->
     <section id="view-auth" class="hidden">
-      <div class="max-w-3xl mx-auto bg-white rounded-lg shadow p-6">
-        <div class="flex border-b border-gray-200 mb-4">
-          <button class="auth-tab px-4 py-2 -mb-px font-semibold border-b-2 border-indigo-600 text-indigo-600" onclick="switchAuthTab('login')">Login</button>
-          <button class="auth-tab px-4 py-2 -mb-px font-semibold text-gray-500" onclick="switchAuthTab('register')">Register</button>
+      <div class="max-w-md mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="flex justify-center mb-6">
+          <img src="./NivNish_Training_Logo-removebg-preview.png" alt="NivNish Training Hub" class="h-12 w-auto object-contain" />
+        </div>
+        <div class="flex border-b border-gray-200 mb-6">
+          <button class="auth-tab flex-1 pb-3 text-center font-semibold border-b-2 border-indigo-600 text-indigo-600 text-sm" onclick="switchAuthTab('login')">Login</button>
+          <button class="auth-tab flex-1 pb-3 text-center font-semibold text-gray-500 text-sm" onclick="switchAuthTab('register')">Register</button>
         </div>
 
-        <!-- LOGIN FORM -->
-        <div id="auth-login" class="auth-panel">
+        <div id="auth-login" class="auth-panel space-y-4">
           <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium">Email</label>
-              <input required type="email" id="loginEmail" placeholder="Enter your email" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Email</label>
+              <input required type="email" id="loginEmail" placeholder="Enter your email" class="w-full rounded-lg border border-gray-300 bg-gray-50/50 p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
             </div>
             <div>
-              <div class="flex justify-between items-center">
-                <label class="block text-sm font-medium">Password</label>
-                <button type="button" onclick="openForgotPassword()" class="text-xs text-indigo-600 hover:underline">Forgot Password?</button>
+              <div class="flex justify-between items-center mb-1">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600">Password</label>
+                <button type="button" onclick="openForgotPassword()" class="text-xs text-indigo-600 hover:underline font-medium">Forgot Password?</button>
               </div>
-              <div class="relative mt-1">
-                <input required type="password" id="loginPassword" placeholder="Enter your password" class="w-full rounded border border-gray-200 bg-gray-50 p-2 pr-10" />
+              <div class="relative">
+                <input required type="password" id="loginPassword" placeholder="Enter your password" class="w-full rounded-lg border border-gray-300 bg-gray-50/50 p-2.5 pr-10 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
                 <button type="button" onclick="togglePasswordVisibility('loginPassword', 'loginEyeIcon')" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
                   <i id="loginEyeIcon" class="fas fa-eye"></i>
                 </button>
               </div>
             </div>
-            <div class="flex items-center justify-between">
-              <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-semibold">Login</button>
+            <div>
+              <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition">Login</button>
             </div>
-            <div id="loginMessage" class="text-sm text-red-500 font-medium"></div>
+            <div id="loginMessage" class="text-xs text-rose-500 font-medium text-center"></div>
           </form>
         </div>
 
-        <!-- REGISTER FORM -->
-        <div id="auth-register" class="auth-panel hidden">
+        <div id="auth-register" class="auth-panel hidden space-y-4">
           <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium">Full Name</label>
-              <input required type="text" id="regName" placeholder="Enter your full name" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Full Name</label>
+              <input required type="text" id="regName" placeholder="Enter your full name" class="w-full rounded-lg border border-gray-300 bg-gray-50/50 p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
             </div>
             <div>
-              <label class="block text-sm font-medium">Email</label>
-              <input required type="email" id="regEmail" placeholder="Enter your email" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Email</label>
+              <input required type="email" id="regEmail" placeholder="Enter your email" class="w-full rounded-lg border border-gray-300 bg-gray-50/50 p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
             </div>
             <div>
-              <label class="block text-sm font-medium">Phone Number (with Country Code, e.g., +91...)</label>
-              <input required type="tel" id="regPhone" placeholder="+919876543210" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Phone Number (with Country Code)</label>
+              <input required type="tel" id="regPhone" placeholder="+919876543210" class="w-full rounded-lg border border-gray-300 bg-gray-50/50 p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
             </div>
             <div>
-              <label class="block text-sm font-medium">Password</label>
-              <div class="relative mt-1">
-                <input required type="password" id="regPassword" placeholder="Create a password" class="w-full rounded border border-gray-200 bg-gray-50 p-2 pr-10" />
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Password</label>
+              <div class="relative">
+                <input required type="password" id="regPassword" placeholder="Create a password" class="w-full rounded-lg border border-gray-300 bg-gray-50/50 p-2.5 pr-10 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
                 <button type="button" onclick="togglePasswordVisibility('regPassword', 'regEyeIcon')" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
                   <i id="regEyeIcon" class="fas fa-eye"></i>
                 </button>
               </div>
-              <div class="mt-2 text-xs text-gray-500 bg-gray-50 p-2.5 rounded border border-gray-100 space-y-1">
+              <div class="mt-2 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-200 space-y-1">
                 <div class="font-semibold text-gray-700">Password Requirements:</div>
                 <ul id="passwordCriteria" class="list-disc pl-4 space-y-0.5">
                   <li id="crit-length" class="text-rose-500">At least 8 characters long</li>
                   <li id="crit-upper" class="text-rose-500">At least one uppercase letter (A-Z)</li>
                   <li id="crit-lower" class="text-rose-500">At least one lowercase letter (a-z)</li>
                   <li id="crit-number" class="text-rose-500">At least one number (0-9)</li>
-                  <li id="crit-special" class="text-rose-500">At least one wild/special character (e.g. @, #, $, !)</li>
+                  <li id="crit-special" class="text-rose-500">At least one special character (e.g. @, #, $, !)</li>
                 </ul>
               </div>
             </div>
             <div>
-              <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-semibold">Register Account</button>
+              <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition">Register Account</button>
             </div>
-            <div id="registerMessage" class="text-sm text-red-500 font-medium"></div>
+            <div id="registerMessage" class="text-xs text-rose-500 font-medium text-center"></div>
           </form>
         </div>
       </div>
     </section>
 
-    <!-- ADMIN LOGIN VIEW -->
     <section id="view-admin-login" class="hidden">
-      <div class="max-w-md mx-auto bg-white rounded-lg shadow p-6 space-y-4">
+      <div class="max-w-md mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
+        <div class="flex justify-center mb-2">
+          <img src="./NivNish_Training_Logo-removebg-preview.png" alt="NivNish Training Hub" class="h-12 w-auto object-contain" />
+        </div>
         <div class="text-center pb-2 border-b border-gray-100">
-          <h2 class="text-xl font-bold">Admin Portal Authentication</h2>
+          <h2 class="text-xl font-bold text-gray-900">Admin Portal Authentication</h2>
           <p class="text-xs text-gray-500 mt-0.5">Authorized personnel only</p>
         </div>
         <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium">Admin Email</label>
-            <input required type="email" id="adminLoginEmail" placeholder="Enter admin email" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Admin Email</label>
+            <input required type="email" id="adminLoginEmail" placeholder="Enter admin email" class="w-full rounded-lg border border-gray-300 bg-gray-50/50 p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
           </div>
           <div>
-            <label class="block text-sm font-medium">Password</label>
-            <div class="relative mt-1">
-              <input required type="password" id="adminLoginPassword" placeholder="Enter admin password" class="w-full rounded border border-gray-200 bg-gray-50 p-2 pr-10" />
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Password</label>
+            <div class="relative">
+              <input required type="password" id="adminLoginPassword" placeholder="Enter admin password" class="w-full rounded-lg border border-gray-300 bg-gray-50/50 p-2.5 pr-10 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               <button type="button" onclick="togglePasswordVisibility('adminLoginPassword', 'adminEyeIcon')" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
                 <i id="adminEyeIcon" class="fas fa-eye"></i>
               </button>
             </div>
           </div>
           <div>
-            <button type="submit" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-semibold">Admin Login</button>
+            <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition">Admin Login</button>
           </div>
-          <div id="adminLoginMessage" class="text-sm text-red-500 font-medium text-center"></div>
+          <div id="adminLoginMessage" class="text-xs text-rose-500 font-medium text-center"></div>
         </form>
       </div>
     </section>
 
-    <!-- DASHBOARD (STUDENT) -->
     <section id="view-dashboard" class="hidden">
       <div class="max-w-4xl mx-auto space-y-4">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-4 rounded-lg shadow">
-          <h2 class="text-xl font-semibold">Assigned Quizzes</h2>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+          <div class="flex items-center gap-3">
+            <img src="./NivNish_Training_Logo-removebg-preview.png" alt="Logo" class="h-10 w-auto object-contain" />
+            <h2 class="text-xl font-bold text-gray-900">Assigned Quizzes</h2>
+          </div>
           <div class="flex items-center gap-2 w-full sm:w-auto">
-            <input id="quizSearch" oninput="filterQuizzes()" placeholder="Search quizzes..." class="p-2 rounded border border-gray-200 bg-gray-50 text-sm flex-1 sm:w-60" />
-            <button onclick="navigateTo('history')" class="px-3 py-2 bg-gray-100 rounded text-sm font-semibold hover:bg-gray-200">History</button>
+            <input id="quizSearch" oninput="filterQuizzes()" placeholder="Search quizzes..." class="p-2 rounded-lg border border-gray-300 bg-gray-50 text-sm flex-1 sm:w-60 focus:bg-white focus:outline-none" />
+            <button onclick="navigateTo('history')" class="px-3 py-2 bg-gray-100 rounded-lg text-sm font-semibold hover:bg-gray-200 transition">History</button>
           </div>
         </div>
 
-        <div class="flex items-center justify-between bg-white p-4 rounded-lg shadow">
+        <div class="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
           <div>
-            <div class="text-xs text-gray-500">Signed in as</div>
-            <div id="userDisplay" class="font-semibold text-sm">Guest User</div>
+            <div class="text-xs text-gray-500 font-medium">Signed in as</div>
+            <div id="userDisplay" class="font-bold text-sm text-gray-900">Guest User</div>
           </div>
-          <button onclick="logout()" class="px-3 py-1.5 bg-rose-50 text-rose-600 text-xs font-semibold rounded hover:bg-rose-100">Logout</button>
+          <button onclick="logout()" class="px-3 py-1.5 bg-rose-50 text-rose-600 text-xs font-semibold rounded-lg hover:bg-rose-100 transition">Logout</button>
         </div>
 
         <div id="quizzesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
       </div>
     </section>
 
-    <!-- QUIZ RUNNER -->
     <section id="view-quiz" class="hidden">
-      <div class="max-w-2xl mx-auto bg-white rounded-lg p-6 shadow space-y-6">
+      <div class="max-w-2xl mx-auto bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-6">
         <div class="flex items-center justify-between pb-3 border-b border-gray-100">
           <div>
-            <h2 id="quizTitle" class="text-xl font-semibold">Quiz Title</h2>
+            <h2 id="quizTitle" class="text-xl font-bold text-gray-900">Quiz Title</h2>
             <div id="quizMeta" class="text-xs text-gray-500 mt-0.5">Timer: <span id="quizTimer" class="font-mono font-bold text-rose-500">15:00</span></div>
           </div>
-          <button onclick="exitQuiz()" class="px-3 py-1.5 bg-gray-100 rounded text-xs font-semibold">Exit</button>
+          <button onclick="exitQuiz()" class="px-3 py-1.5 bg-gray-100 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">Exit</button>
         </div>
 
         <form id="quizForm" class="space-y-4 min-h-[200px]"></form>
@@ -229,68 +205,85 @@
         <div class="flex items-center justify-between pt-3 border-t border-gray-100">
           <div id="questionProgress" class="text-xs text-gray-500 font-medium">Question 1 / 1</div>
           <div class="flex gap-2">
-            <button id="prevQ" onclick="previousQuestion()" class="px-3 py-1.5 bg-gray-100 rounded text-xs font-semibold">Previous</button>
-            <button id="nextQ" onclick="nextQuestion()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold">Next</button>
-            <button id="submitQuiz" onclick="submitQuiz()" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold">Submit Quiz</button>
+            <button id="prevQ" onclick="previousQuestion()" class="px-3 py-1.5 bg-gray-100 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">Previous</button>
+            <button id="nextQ" onclick="nextQuestion()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition">Next</button>
+            <button id="submitQuiz" onclick="submitQuiz()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition">Submit Quiz</button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- HISTORY & CERTIFICATES -->
     <section id="view-history" class="hidden">
-      <div class="max-w-3xl mx-auto bg-white rounded-lg p-6 shadow space-y-4">
+      <div class="max-w-3xl mx-auto bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-4">
         <div class="flex items-center justify-between pb-3 border-b border-gray-100">
-          <h2 class="text-xl font-semibold">Your Results & Certificates</h2>
-          <button onclick="navigateTo('dashboard')" class="px-3 py-1.5 bg-indigo-600 text-white rounded text-xs font-semibold">Back to Dashboard</button>
+          <h2 class="text-xl font-bold text-gray-900">Your Results & Certificates</h2>
+          <button onclick="navigateTo('dashboard')" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition">Back to Dashboard</button>
         </div>
         <div id="resultsList" class="space-y-3"></div>
       </div>
     </section>
 
-    <!-- ADMIN DASHBOARD -->
     <section id="view-admin" class="hidden">
       <div class="space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-lg shadow">
-          <h2 class="text-2xl font-semibold">Admin Command Center</h2>
-          <div class="flex items-center gap-2">
-            <button onclick="openCreateQuizModal()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold">+ Create Quiz</button>
-            <button onclick="document.getElementById('bulkFile').click()" class="px-3 py-2 bg-gray-100 rounded text-xs font-semibold">Bulk Student Import</button>
-            <input id="bulkFile" type="file" accept=".csv" class="hidden" onchange="handleBulkImport(event)" />
-            <button onclick="logout()" class="px-3 py-2 bg-rose-50 text-rose-600 rounded text-xs font-semibold hover:bg-rose-100">Logout</button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="col-span-2 bg-white rounded-lg p-4 shadow space-y-3">
-            <h3 class="font-semibold text-sm">Active Quizzes</h3>
-            <div id="adminQuizzes" class="space-y-2"></div>
-          </div>
-
-          <aside class="bg-white rounded-lg p-4 shadow space-y-3 text-center">
-            <h3 class="font-semibold text-sm text-left">Cohort Pass Analytics</h3>
-            <div class="chart-container" style="position: relative; height: 220px; max-width: 260px; margin: 0 auto;">
-              <canvas id="gradesChart"></canvas>
+        <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <img src="./NivNish_Training_Logo-removebg-preview.png" alt="NivNish Training Hub" class="h-12 w-auto object-contain" />
+            <div>
+              <div class="font-bold text-gray-900 text-base">Admin</div>
+              <div class="text-xs text-gray-500">Training dashboard</div>
             </div>
-            <button onclick="sendReminderEmails()" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white rounded text-xs font-semibold">Send Reminder Emails</button>
-          </aside>
+          </div>
+          <div class="flex items-center gap-4">
+            <button onclick="logout()" class="text-xs font-semibold text-gray-700 hover:text-gray-900 flex items-center gap-1.5 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
+              <i class="fas fa-right-from-bracket"></i> Sign out
+            </button>
+          </div>
         </div>
 
-        <div class="bg-white rounded-lg p-4 shadow space-y-3">
-          <h3 class="font-semibold text-sm">Registered Students</h3>
-          <div id="adminStudents" class="space-y-2"></div>
+        <div class="flex items-center gap-2 border-b border-gray-200 pb-2">
+          <button class="px-4 py-2 bg-gray-100 text-gray-900 font-semibold rounded-lg text-sm flex items-center gap-2 shadow-sm">
+            <i class="fas fa-file-lines"></i> Quizzes
+          </button>
         </div>
 
-        <div class="bg-white rounded-lg p-4 shadow space-y-3">
-          <h3 class="font-semibold text-sm">Student Submissions & Grades</h3>
-          <div id="adminResults" class="space-y-2"></div>
+        <div class="flex items-center justify-between">
+          <h2 class="text-2xl font-bold text-gray-900">Quizzes</h2>
+          <button onclick="openCreateQuizModal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-sm flex items-center gap-2 transition">
+            <i class="fas fa-plus"></i> New quiz
+          </button>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-gray-200 text-xs font-semibold uppercase tracking-wider text-gray-500 bg-gray-50/50">
+                  <th class="p-4 pl-6">Title</th>
+                  <th class="p-4">Status</th>
+                  <th class="p-4 text-right pr-6">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminQuizzesTableBody" class="divide-y divide-gray-100 text-sm">
+                </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
+          <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-3">
+            <h3 class="font-bold text-gray-900 text-sm">Registered Students</h3>
+            <div id="adminStudents" class="space-y-2 max-h-60 overflow-y-auto"></div>
+          </div>
+          <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-3">
+            <h3 class="font-bold text-gray-900 text-sm">Student Submissions & Grades</h3>
+            <div id="adminResults" class="space-y-2 max-h-60 overflow-y-auto"></div>
+          </div>
         </div>
       </div>
     </section>
 
   </main>
 
-  <!-- Inline Helper Scripts -->
   <script>
     function togglePasswordVisibility(inputId, iconId) {
       const input = document.getElementById(inputId);
@@ -331,7 +324,6 @@
     }
   </script>
 
-  <!-- External App Script -->
   <script src="app.js"></script>
 </body>
 </html>
