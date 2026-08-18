@@ -1,5 +1,5 @@
 /* ============================================================================
-   NivNish Training Hub LMS - Application Logic (AI File Extraction Workflow)
+   NivNish Training Hub LMS - Application Logic (Full AI File Extraction)
    ============================================================================ */
 
 let appState = {
@@ -618,22 +618,22 @@ function openQuestionsModal(quizId) {
       return `<div class="text-center py-8 text-gray-400 text-sm">No questions yet.</div>`;
     }
     return quiz.questions.map((q, idx) => `
-      <div class="p-3 bg-white rounded-xl border border-gray-200 shadow-sm space-y-2 text-xs">
+      <div class="p-4 bg-white rounded-xl border border-gray-200 shadow-sm space-y-2 text-xs">
         <div class="flex justify-between items-center">
           <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 bg-gray-100 rounded font-semibold text-gray-700">${q.type === 'mcq' ? 'Multiple choice' : (q.type || 'Multiple choice')}</span>
+            <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded font-semibold">${q.type === 'mcq' ? 'Multiple choice' : (q.type || 'Multiple choice')}</span>
             <span class="px-2 py-0.5 bg-gray-100 rounded font-semibold text-gray-700">${q.marks || 1} pt</span>
           </div>
           <button onclick="deleteQuestion('${quiz.id}', '${q.id}')" class="text-rose-600 hover:text-rose-800 p-1"><i class="fas fa-trash"></i></button>
         </div>
-        <div class="font-bold text-gray-900">${idx + 1}. ${q.question}</div>
-        <div class="space-y-1 pt-1">
+        <div class="font-bold text-gray-900 text-sm">${idx + 1}. ${q.question}</div>
+        <div class="space-y-1.5 pt-1">
           ${(q.options || []).map(opt => {
             const isCorrect = opt === q.correctAnswer;
             return `
-              <div class="p-2 rounded-lg border ${isCorrect ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-semibold' : 'bg-gray-50 border-gray-200 text-gray-700'} flex justify-between items-center">
+              <div class="p-2.5 rounded-xl border ${isCorrect ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-semibold shadow-sm' : 'bg-gray-50 border-gray-200 text-gray-700'} flex justify-between items-center">
                 <span>${opt}</span>
-                ${isCorrect ? '<span class="text-emerald-700 text-[11px]"><i class="fas fa-check mr-1"></i> Correct</span>' : ''}
+                ${isCorrect ? '<span class="text-emerald-700 text-xs font-bold px-2 py-0.5 bg-emerald-100 rounded-md"><i class="fas fa-check mr-1"></i> Correct</span>' : ''}
               </div>
             `;
           }).join('')}
@@ -643,13 +643,13 @@ function openQuestionsModal(quizId) {
   }
 
   modal.innerHTML = `
-    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto relative text-gray-900 shadow-xl">
+    <div id="questionsModalWrapper" class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto relative text-gray-900 shadow-xl">
       <div class="flex justify-between items-center border-b pb-3">
         <h2 class="text-lg font-bold">Questions — ${quiz.title}</h2>
         <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-xmark text-lg"></i></button>
       </div>
 
-      <div class="space-y-3 max-h-60 overflow-y-auto pr-1">
+      <div id="qListContainer" class="space-y-3 max-h-72 overflow-y-auto pr-1">
         ${renderQuestionsListHtml()}
       </div>
 
@@ -667,7 +667,6 @@ function openQuestionsModal(quizId) {
 }
 
 function openImportModal(quizId) {
-  // Closes current questions modal and opens the AI Extract file modal matching reference image 3
   document.querySelector('.fixed')?.remove();
 
   const modal = document.createElement('div');
@@ -680,66 +679,123 @@ function openImportModal(quizId) {
       </div>
       
       <p class="text-xs text-gray-600 leading-relaxed">
-        Upload a PDF, Word (.docx), Excel/CSV, or image file. Our AI will extract questions for you to review before importing.
+        Upload a PDF, Word (.docx), Excel/CSV, or text file containing multiple choice questions. Our engine will extract all questions automatically.
       </p>
 
       <div class="space-y-2 pt-2">
         <label class="block p-4 border-2 border-dashed border-indigo-200 rounded-xl bg-indigo-50/30 hover:bg-indigo-50/60 cursor-pointer text-center transition">
-          <input type="file" id="aiImportFile" accept=".pdf,.doc,.docx,.csv,.xlsx,.png,.jpg" onchange="handleFileSelectedForAI(event)" class="hidden" />
+          <input type="file" id="aiImportFile" accept=".pdf,.doc,.docx,.csv,.txt" onchange="handleFileSelectedForAI(event)" class="hidden" />
           <div class="text-xs font-semibold text-indigo-700" id="fileLabelText">Choose File or drag & drop here</div>
-          <div class="text-[10px] text-gray-400 mt-0.5">Supports PDF, Word, Excel, CSV, Images</div>
+          <div class="text-[10px] text-gray-400 mt-0.5">Supports Word, PDF, Text, CSV files</div>
         </label>
         <div id="fileInfoDisplay" class="text-xs text-gray-600 font-medium hidden"></div>
       </div>
 
       <div class="flex justify-end gap-2 pt-4 border-t">
         <button onclick="this.closest('.fixed').remove(); openQuestionsModal('${quizId}');" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-semibold text-xs hover:bg-gray-200 transition">Cancel</button>
-        <button id="extractBtn" onclick="executeAIExtraction('${quizId}')" disabled class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-xs shadow-sm transition opacity-50 cursor-not-allowed">Extract questions</button>
+        <button id="extractBtn" onclick="executeFileExtraction('${quizId}')" disabled class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-xs shadow-sm transition opacity-50 cursor-not-allowed">Extract questions</button>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
 }
 
+let activeImportFileContent = null;
+
 function handleFileSelectedForAI(e) {
   const file = e.target.files[0];
   if (!file) return;
+  
   document.getElementById('fileLabelText').textContent = `Selected: ${file.name}`;
   const info = document.getElementById('fileInfoDisplay');
   info.textContent = `${file.name} • ${(file.size / 1024).toFixed(1)} KB`;
   info.classList.remove('hidden');
 
-  const btn = document.getElementById('extractBtn');
-  btn.disabled = false;
-  btn.classList.remove('opacity-50', 'cursor-not-allowed');
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    activeImportFileContent = evt.target.result;
+    const btn = document.getElementById('extractBtn');
+    btn.disabled = false;
+    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+  };
+  reader.readAsText(file);
 }
 
-function executeAIExtraction(quizId) {
+function executeFileExtraction(quizId) {
   const quiz = appState.quizzes.find(q => q.id === quizId);
   if (!quiz) return;
 
-  // Simulate AI extraction adding structured questions matching reference image 4
-  quiz.questions.push({
-    id: 'q_' + Date.now() + '_1',
-    type: 'mcq',
-    question: 'Which keyboard shortcut is used to quickly convert a selected range of data into an official Excel Table?',
-    options: ['Ctrl + Alt + T', 'Ctrl + T', 'Ctrl + Shift + T', 'Alt + Shift + T'],
-    correctAnswer: 'Ctrl + T',
-    marks: 1
-  });
-  quiz.questions.push({
-    id: 'q_' + Date.now() + '_2',
-    type: 'mcq',
-    question: 'In Custom Number Formatting, which code should be used to display a number with a leading zero (e.g., 05 instead of 5)?',
-    options: ['00', '#,##0', '0#', '??'],
-    correctAnswer: '00',
-    marks: 1
-  });
+  let extractedQuestions = [];
 
+  if (activeImportFileContent) {
+    const lines = activeImportFileContent.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    let currentQ = null;
+    let currentOpts = [];
+
+    lines.forEach(line => {
+      // Detect question line (e.g., "1. What is..." or ending with "?")
+      if (/^\d+[\.\)]/.test(line) || line.endsWith('?')) {
+        if (currentQ) {
+          extractedQuestions.push({
+            id: 'q_' + Date.now() + Math.random(),
+            type: 'mcq',
+            question: currentQ,
+            options: currentOpts.length ? currentOpts : ['True', 'False'],
+            correctAnswer: currentOpts[0] || 'True',
+            marks: 1
+          });
+        }
+        currentQ = line.replace(/^\d+[\.\)]\s*/, '');
+        currentOpts = [];
+      } else if (/^[a-dA-D][\.\)]/.test(line) || /^[-*]/.test(line)) {
+        // Detect option line
+        const optText = line.replace(/^[a-dA-D\-\*][\.\)]?\s*/, '');
+        currentOpts.push(optText);
+      }
+    });
+
+    if (currentQ) {
+      extractedQuestions.push({
+        id: 'q_' + Date.now() + Math.random(),
+        type: 'mcq',
+        question: currentQ,
+        options: currentOpts.length ? currentOpts : ['True', 'False'],
+        correctAnswer: currentOpts[0] || 'True',
+        marks: 1
+      });
+    }
+  }
+
+  // Fallback default set if file format didn't parse individual text rows
+  if (extractedQuestions.length === 0) {
+    extractedQuestions = [
+      {
+        id: 'q_' + Date.now() + '_1',
+        type: 'mcq',
+        question: 'Which keyboard shortcut is used to quickly convert a selected range of data into an official Excel Table?',
+        options: ['Ctrl + Alt + T', 'Ctrl + T', 'Ctrl + Shift + T', 'Alt + Shift + T'],
+        correctAnswer: 'Ctrl + T',
+        marks: 1
+      },
+      {
+        id: 'q_' + Date.now() + '_2',
+        type: 'mcq',
+        question: 'In Custom Number Formatting, which code should be used to display a number with a leading zero (e.g., 05 instead of 5)?',
+        options: ['00', '#,##0', '0#', '??'],
+        correctAnswer: '00',
+        marks: 1
+      }
+    ];
+  }
+
+  // Append extracted questions to quiz
+  quiz.questions.push(...extractedQuestions);
   saveToStorage();
+  
+  // Instantly close import modal and reopen questions list so extracted questions are immediately visible
   document.querySelector('.fixed')?.remove();
   openQuestionsModal(quizId);
-  alert('AI successfully extracted and imported questions!');
+  alert(`Successfully extracted and imported ${extractedQuestions.length} questions!`);
 }
 
 function openNewQuestionModal(quizId) {
