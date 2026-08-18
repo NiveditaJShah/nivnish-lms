@@ -1,337 +1,870 @@
-<!doctype html>
-<html lang="en" class="antialiased">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>NivNish Training Hub — Pure For Sure LMS</title>
+/* ============================================================================
+   NivNish Training Hub LMS - Application Logic (Preview & Publish Toggle)
+   ============================================================================ */
 
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+let appState = {
+  currentUser: null,
+  currentView: 'home',
+  users: [],
+  quizzes: [],
+  results: [],
+  currentQuiz: null,
+  timerInterval: null
+};
 
-  <!-- Tailwind CSS CDN -->
-  <script>
-    tailwind = window.tailwind || {};
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui'] }
-        }
+document.addEventListener('DOMContentLoaded', () => {
+  loadFromStorage();
+  loadSampleData();
+  navigateTo('home');
+});
+
+function navigateTo(viewName) {
+  if (viewName === 'admin') {
+    if (!appState.currentUser || appState.currentUser.role !== 'admin') {
+      viewName = 'admin-login';
+    }
+  }
+
+  if (!appState.currentUser && ['dashboard', 'quiz', 'history'].includes(viewName)) {
+    viewName = 'auth';
+  }
+
+  appState.currentView = viewName;
+  document.querySelectorAll('section[id^="view-"]').forEach(s => s.classList.add('hidden'));
+  const target = document.getElementById(`view-${viewName}`);
+  if (target) target.classList.remove('hidden');
+
+  if (viewName === 'dashboard') loadStudentDashboard();
+  if (viewName === 'history') loadStudentHistory();
+  if (viewName === 'admin') loadAdminDashboard();
+  window.scrollTo(0, 0);
+}
+
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => {
+    t.classList.remove('border-b-2', 'border-indigo-600', 'text-indigo-600');
+    t.classList.add('text-gray-500');
+  });
+  event.target.classList.add('border-b-2', 'border-indigo-600', 'text-indigo-600');
+  event.target.classList.remove('text-gray-500');
+
+  document.querySelectorAll('.auth-panel').forEach(p => p.classList.add('hidden'));
+  document.getElementById(`auth-${tab}`).classList.remove('hidden');
+}
+
+function validatePasswordStrength(password) {
+  const hasLower = /[a-z]/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+  const hasLength = password.length >= 8;
+
+  return hasLower && hasUpper && hasNumber && hasSpecial && hasLength;
+}
+
+function validatePhoneNumber(phone) {
+  const phoneRegex = /^\+[1-9]\d{9,14}$/;
+  return phoneRegex.test(phone);
+}
+
+function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  const user = appState.users.find(u => u.email === email && u.password === password);
+  if (!user) {
+    document.getElementById('loginMessage').textContent = 'Invalid email or password.';
+    return;
+  }
+  appState.currentUser = user;
+  saveToStorage();
+  navigateTo(user.role === 'admin' ? 'admin' : 'dashboard');
+}
+
+function handleAdminLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('adminLoginEmail').value;
+  const password = document.getElementById('adminLoginPassword').value;
+  const user = appState.users.find(u => u.email === email && u.password === password && u.role === 'admin');
+  if (!user) {
+    document.getElementById('adminLoginMessage').textContent = 'Invalid admin credentials.';
+    return;
+  }
+  appState.currentUser = user;
+  saveToStorage();
+  navigateTo('admin');
+}
+
+function openForgotPassword() {
+  const email = prompt('Enter your registered email address for password recovery:');
+  if (!email) return;
+  const user = appState.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (!user) {
+    alert('No account found with this email address.');
+    return;
+  }
+  const newPass = prompt('Enter your new secure password (must contain upper, lower, number, special character, min 8 chars):');
+  if (!newPass) return;
+  
+  if (!validatePasswordStrength(newPass)) {
+    alert('Password reset failed! Password does not meet security criteria.');
+    return;
+  }
+
+  user.password = newPass;
+  saveToStorage();
+  alert('Password updated successfully! You can now log in with your new password.');
+}
+
+function handleRegister(e) {
+  e.preventDefault();
+  const name = document.getElementById('regName').value;
+  const email = document.getElementById('regEmail').value;
+  const phone = document.getElementById('regPhone').value.trim();
+  const password = document.getElementById('regPassword').value;
+
+  if (!validatePhoneNumber(phone)) {
+    document.getElementById('registerMessage').textContent = 'Invalid phone number format. Include country code starting with "+" (e.g., +919876543210).';
+    return;
+  }
+
+  if (!validatePasswordStrength(password)) {
+    document.getElementById('registerMessage').textContent = 'Password is too short or missing required criteria. Check the rules above.';
+    return;
+  }
+
+  if (appState.users.find(u => u.email === email)) {
+    document.getElementById('registerMessage').textContent = 'Email already registered.';
+    return;
+  }
+
+  const newUser = { 
+    id: 'usr_' + Date.now(), 
+    name, 
+    email, 
+    phone, 
+    password, 
+    role: 'student' 
+  };
+  
+  appState.users.push(newUser);
+  appState.currentUser = newUser;
+  saveToStorage();
+  navigateTo('dashboard');
+}
+
+function logout() {
+  appState.currentUser = null;
+  saveToStorage();
+  navigateTo('home');
+}
+
+function loadStudentDashboard() {
+  document.getElementById('userDisplay').textContent = appState.currentUser.name;
+  renderStudentQuizzes();
+}
+
+function renderStudentQuizzes() {
+  const grid = document.getElementById('quizzesGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  
+  // Only display published quizzes to students
+  const activeQuizzes = appState.quizzes.filter(q => q.isPublished !== false);
+  
+  if (activeQuizzes.length === 0) {
+    grid.innerHTML = '<p class="text-sm text-gray-500">No active training quizzes available at the moment.</p>';
+    return;
+  }
+
+  activeQuizzes.forEach(quiz => {
+    const completed = appState.results.find(r => r.userId === appState.currentUser.id && r.quizId === quiz.id);
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-lg p-4 border border-gray-200 shadow-sm space-y-3';
+    card.innerHTML = `
+      <div class="flex justify-between items-start">
+        <h3 class="font-semibold text-base">${quiz.title}</h3>
+        <span class="text-[11px] px-2 py-0.5 rounded font-bold ${completed ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+          ${completed ? 'Completed' : 'Available'}
+        </span>
+      </div>
+      <p class="text-xs text-gray-500 leading-relaxed">${quiz.description || 'Enterprise training module.'}</p>
+      <div class="flex items-center justify-between pt-2 border-t border-gray-100 text-xs">
+        <span class="text-gray-400">${quiz.questions.length} questions • ${quiz.timeLimit || 15} mins</span>
+        <button onclick="startQuiz('${quiz.id}')" class="px-3 py-1.5 rounded text-xs font-semibold ${completed ? 'bg-gray-200 text-gray-600 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}" ${completed ? 'disabled' : ''}>
+          ${completed ? 'Completed' : 'Start Quiz'}
+        </button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function filterQuizzes() {
+  const search = document.getElementById('quizSearch').value.toLowerCase();
+  document.querySelectorAll('#quizzesGrid > div').forEach(card => {
+    const title = card.querySelector('h3').textContent.toLowerCase();
+    card.style.display = title.includes(search) ? '' : 'none';
+  });
+}
+
+function startQuiz(quizId) {
+  const quiz = appState.quizzes.find(q => q.id === quizId);
+  if (!quiz) return;
+  const completed = appState.results.find(r => r.userId === appState.currentUser.id && r.quizId === quiz.id);
+  if (completed) {
+    alert('You have already completed this quiz. Only 1 attempt is allowed.');
+    return;
+  }
+  appState.currentQuiz = { ...quiz, currentQuestion: 0, answers: {}, startTime: Date.now() };
+  renderQuizRunner();
+  navigateTo('quiz');
+  startQuizTimer();
+}
+
+function renderQuizRunner() {
+  const quiz = appState.currentQuiz;
+  document.getElementById('quizTitle').textContent = quiz.title;
+  const q = quiz.questions[quiz.currentQuestion];
+  const form = document.getElementById('quizForm');
+  
+  let inputHtml = '';
+  const currentAns = quiz.answers[`q_${quiz.currentQuestion}`];
+
+  if (q.type === 'mcq') {
+    inputHtml = `<div class="space-y-2 pt-2">` + q.options.map(opt => `
+      <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
+        <input type="radio" name="currentOpt" value="${opt}" ${currentAns === opt ? 'checked' : ''} onchange="saveCurrentAnswer('${opt}')" class="text-indigo-600" />
+        <span>${opt}</span>
+      </label>`).join('') + `</div>`;
+  } else if (q.type === 'multi') {
+    const selectedList = Array.isArray(currentAns) ? currentAns : [];
+    inputHtml = `<div class="space-y-2 pt-2">` + q.options.map(opt => `
+      <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
+        <input type="checkbox" value="${opt}" ${selectedList.includes(opt) ? 'checked' : ''} onchange="saveMultiAnswer(this)" class="text-indigo-600 rounded" />
+        <span>${opt}</span>
+      </label>`).join('') + `</div>`;
+  } else if (q.type === 'short') {
+    inputHtml = `<div class="pt-2"><input type="text" placeholder="Type your short answer..." value="${currentAns || ''}" oninput="saveCurrentAnswer(this.value)" class="w-full p-3 rounded border border-gray-200 bg-gray-50 text-sm" /></div>`;
+  } else if (q.type === 'long') {
+    inputHtml = `<div class="pt-2"><textarea rows="4" placeholder="Type your detailed answer..." oninput="saveCurrentAnswer(this.value)" class="w-full p-3 rounded border border-gray-200 bg-gray-50 text-sm">${currentAns || ''}</textarea></div>`;
+  } else if (q.type === 'file') {
+    inputHtml = `<div class="pt-2 space-y-2"><input type="file" onchange="saveFileUpload(this)" class="w-full p-2 border border-gray-200 rounded bg-gray-50 text-xs" /><div class="text-xs text-indigo-600 font-semibold">${currentAns ? 'File attached: ' + currentAns : ''}</div></div>`;
+  }
+
+  form.innerHTML = `
+    <div class="space-y-3">
+      <div class="flex justify-between items-center text-xs text-gray-500 font-semibold">
+        <span>Question ${quiz.currentQuestion + 1} of ${quiz.questions.length}</span>
+        <span class="uppercase tracking-wider px-2 py-0.5 bg-gray-100 rounded text-[10px]">${q.type}</span>
+      </div>
+      <div class="text-base font-medium text-gray-800">${q.question}</div>
+      ${inputHtml}
+    </div>
+  `;
+
+  document.getElementById('questionProgress').textContent = `Question ${quiz.currentQuestion + 1} of ${quiz.questions.length}`;
+  document.getElementById('prevQ').style.display = quiz.currentQuestion === 0 ? 'none' : 'inline-block';
+  document.getElementById('nextQ').style.display = quiz.currentQuestion === quiz.questions.length - 1 ? 'none' : 'inline-block';
+  document.getElementById('submitQuiz').style.display = quiz.currentQuestion === quiz.questions.length - 1 ? 'inline-block' : 'none';
+}
+
+function saveCurrentAnswer(val) {
+  appState.currentQuiz.answers[`q_${appState.currentQuiz.currentQuestion}`] = val;
+}
+
+function saveMultiAnswer(el) {
+  const qKey = `q_${appState.currentQuiz.currentQuestion}`;
+  if (!Array.isArray(appState.currentQuiz.answers[qKey])) {
+    appState.currentQuiz.answers[qKey] = [];
+  }
+  const list = appState.currentQuiz.answers[qKey];
+  if (el.checked) {
+    if (!list.includes(el.value)) list.push(el.value);
+  } else {
+    const idx = list.indexOf(el.value);
+    if (idx > -1) list.splice(idx, 1);
+  }
+}
+
+function saveFileUpload(el) {
+  if (el.files && el.files[0]) {
+    saveCurrentAnswer(el.files[0].name);
+    renderQuizRunner();
+  }
+}
+
+function previousQuestion() {
+  if (appState.currentQuiz.currentQuestion > 0) {
+    appState.currentQuiz.currentQuestion--;
+    renderQuizRunner();
+  }
+}
+
+function nextQuestion() {
+  if (appState.currentQuiz.currentQuestion < appState.currentQuiz.questions.length - 1) {
+    appState.currentQuiz.currentQuestion++;
+    renderQuizRunner();
+  }
+}
+
+function startQuizTimer() {
+  if (appState.timerInterval) clearInterval(appState.timerInterval);
+  const limitMs = (appState.currentQuiz.timeLimit || 15) * 60 * 1000;
+  appState.currentQuiz.startTime = Date.now();
+  appState.timerInterval = setInterval(() => {
+    const elapsed = Date.now() - appState.currentQuiz.startTime;
+    const remaining = limitMs - elapsed;
+    if (remaining <= 0) {
+      clearInterval(appState.timerInterval);
+      alert('Time limit expired. Auto-submitting quiz.');
+      submitQuiz();
+      return;
+    }
+    const m = Math.floor(remaining / 60000);
+    const s = Math.floor((remaining % 60000) / 1000);
+    const timerEl = document.getElementById('quizTimer');
+    if (timerEl) timerEl.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+  }, 1000);
+}
+
+function submitQuiz() {
+  if (appState.timerInterval) clearInterval(appState.timerInterval);
+  const quiz = appState.currentQuiz;
+  let score = 0;
+  let maxScore = 0;
+
+  quiz.questions.forEach((q, i) => {
+    maxScore += (q.marks || 1);
+    const userAns = quiz.answers[`q_${i}`];
+    if (q.type === 'mcq' && userAns === q.correctAnswer) {
+      score += (q.marks || 1);
+    } else if (q.type === 'multi' && Array.isArray(userAns)) {
+      const correctArr = Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer];
+      if (userAns.length === correctArr.length && userAns.every(val => correctArr.includes(val))) {
+        score += (q.marks || 1);
       }
-    };
-  </script>
-  <script src="https://cdn.tailwindcss.com"></script>
+    } else if (['short', 'long', 'file'].includes(q.type) && userAns) {
+      score += (q.marks || 1);
+    }
+  });
 
-  <!-- FontAwesome (free CDN) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
+  const percentage = Math.round((score / maxScore) * 100);
+  const passed = percentage >= (quiz.passPercentage || 60);
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  const result = {
+    id: 'res_' + Date.now(),
+    userId: appState.currentUser.id,
+    userName: appState.currentUser.name,
+    quizId: quiz.id,
+    quizTitle: quiz.title,
+    score,
+    totalMarks: maxScore,
+    percentage,
+    passed,
+    answersDetail: quiz.answers,
+    questionsDetail: quiz.questions,
+    submittedAt: new Date().toISOString()
+  };
 
-  <!-- App styles -->
-  <link rel="stylesheet" href="styles.css" />
+  appState.results.push(result);
+  saveToStorage();
+  alert(`Quiz submitted successfully!\nScore: ${score}/${maxScore} (${percentage}%)\nStatus: ${passed ? 'PASSED ✓' : 'FAILED ✗'}`);
+  navigateTo('dashboard');
+}
 
-  <meta name="description" content="NivNish Training Hub - Pure For Sure LMS" />
-</head>
-<body class="bg-gray-50 text-gray-800 min-h-screen">
-  <!-- Header -->
-  <header class="bg-white shadow sticky top-0 z-30">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('home')">
-          <img src="./NivNish_Training_Logo-removebg-preview.png" alt="NivNish Training Hub" class="h-14 w-auto object-contain" />
-          <div>
-            <span class="text-lg sm:text-xl font-semibold">NivNish Training Hub</span>
-            <div class="text-xs text-gray-500">Pure For Sure LMS</div>
-          </div>
+function exitQuiz() {
+  if (confirm('Are you sure you want to exit? Progress will be lost.')) {
+    if (appState.timerInterval) clearInterval(appState.timerInterval);
+    navigateTo('dashboard');
+  }
+}
+
+function loadStudentHistory() {
+  const list = document.getElementById('resultsList');
+  if (!list) return;
+  list.innerHTML = '';
+  const myResults = appState.results.filter(r => r.userId === appState.currentUser.id);
+  if (myResults.length === 0) {
+    list.innerHTML = '<p class="text-sm text-gray-500">No past quiz attempts found.</p>';
+    return;
+  }
+  myResults.forEach(r => {
+    const item = document.createElement('div');
+    item.className = 'p-4 rounded border border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-50';
+    item.innerHTML = `
+      <div>
+        <div class="font-semibold text-sm">${r.quizTitle}</div>
+        <div class="text-xs text-gray-500">Submitted: ${new Date(r.submittedAt).toLocaleDateString()}</div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="text-right">
+          <div class="text-sm font-bold ${r.passed ? 'text-emerald-600' : 'text-rose-600'}">${r.percentage}% (${r.score}/${r.totalMarks})</div>
+          <div class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">${r.passed ? 'Passed' : 'Failed'}</div>
         </div>
-
-        <div class="flex items-center gap-2">
-          <nav class="flex items-center gap-1">
-            <button type="button" onclick="navigateTo('home')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100">Home</button>
-            <button type="button" onclick="navigateTo('auth')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100">Login</button>
-            <button type="button" onclick="navigateTo('dashboard')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100">Dashboard</button>
-            <button type="button" onclick="navigateTo('admin')" class="nav-btn px-3 py-2 text-sm rounded hover:bg-gray-100">Admin</button>
-          </nav>
+        <div class="flex gap-2">
+          <button onclick="reviewSubmission('${r.id}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold">Review</button>
+          ${r.passed ? `<button onclick="viewCertificate('${r.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold">Certificate</button>` : ''}
         </div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function reviewSubmission(resId) {
+  const r = appState.results.find(res => res.id === resId);
+  if (!r) return;
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto';
+  
+  let qReviewHtml = '';
+  if (r.questionsDetail && r.answersDetail) {
+    r.questionsDetail.forEach((q, idx) => {
+      const userAns = r.answersDetail[`q_${idx}`] || 'No Answer Provided';
+      qReviewHtml += `
+        <div class="p-3 bg-gray-50 rounded border border-gray-200 space-y-1 text-left text-xs">
+          <div class="font-semibold text-gray-800">Q${idx + 1}: ${q.question}</div>
+          <div class="text-indigo-600"><strong>Your Answer:</strong> ${Array.isArray(userAns) ? userAns.join(', ') : userAns}</div>
+          <div class="text-emerald-700"><strong>Correct Answer:</strong> ${Array.isArray(q.correctAnswer) ? q.correctAnswer.join(', ') : (q.correctAnswer || 'Evaluated qualitatively')}</div>
+        </div>
+      `;
+    });
+  }
+
+  modal.innerHTML = `
+    <div class="bg-white rounded-lg max-w-2xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto relative text-gray-900 shadow-2xl">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h2 class="text-lg font-bold">Review Submission: ${r.quizTitle}</h2>
+        <span class="text-xs font-bold px-2 py-1 rounded ${r.passed ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${r.percentage}% (${r.score}/${r.totalMarks})</span>
+      </div>
+      <div class="space-y-3">${qReviewHtml}</div>
+      <div class="text-center pt-2">
+        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-700 text-white rounded text-xs font-semibold">Close Review</button>
       </div>
     </div>
-  </header>
+  `;
+  document.body.appendChild(modal);
+}
 
-  <!-- Main Container -->
-  <main class="max-w-6xl mx-auto p-4" id="appRoot">
-
-    <!-- HOME / LANDING VIEW -->
-    <section id="view-home" class="">
-      <div class="max-w-4xl mx-auto bg-white rounded-lg shadow p-8 text-center space-y-6">
-        <h1 class="text-3xl font-bold">Welcome to NivNish Training Hub</h1>
-        <p class="text-gray-600">Pure For Sure Learning Management System. Explore modules, assessments, and certifications below:</p>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-          <div class="p-6 border border-gray-200 rounded-lg bg-indigo-50/50 space-y-3">
-            <h2 class="text-xl font-semibold">Admin Portal</h2>
-            <p class="text-sm text-gray-600">Create quizzes, manage student registrations, and view cohort analytics.</p>
-            <button onclick="navigateTo('admin')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-semibold">Admin Access</button>
-          </div>
-
-          <div class="p-6 border border-gray-200 rounded-lg bg-green-50/50 space-y-3">
-            <h2 class="text-xl font-semibold">Student Portal</h2>
-            <p class="text-sm text-gray-600">Take assigned quizzes, track past scores, and earn verified printable certificates.</p>
-            <div class="flex gap-3 pt-1">
-              <button onclick="navigateTo('auth')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-semibold">Student Login</button>
-            </div>
-          </div>
+function viewCertificate(resId) {
+  const r = appState.results.find(res => res.id === resId);
+  if (!r) return;
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4';
+  modal.innerHTML = `
+    <div class="bg-white rounded-lg max-w-2xl w-full p-6 space-y-4 text-center relative text-gray-900 shadow-2xl">
+      <div class="certificate">
+        <div class="text-xs tracking-widest text-indigo-600 font-bold mb-2 uppercase">Certificate of Achievement</div>
+        <h2 class="text-2xl font-black mb-1">NivNish Training Hub</h2>
+        <div class="text-[11px] text-gray-500 mb-6">Pure For Sure LMS Verification Engine</div>
+        <p class="text-xs text-gray-600">This verified credential is proudly presented to</p>
+        <p class="text-xl font-bold my-2 text-indigo-900">${r.userName}</p>
+        <p class="text-xs text-gray-600">for successfully passing the assessment module</p>
+        <p class="text-lg font-semibold my-2">${r.quizTitle}</p>
+        <div class="mt-6 pt-4 border-t border-gray-200 flex justify-between text-xs text-gray-500">
+          <span>Score: ${r.percentage}%</span>
+          <span>Date: ${new Date(r.submittedAt).toLocaleDateString()}</span>
         </div>
       </div>
-    </section>
-
-    <!-- AUTH VIEW (STUDENT LOGIN / REGISTER) -->
-    <section id="view-auth" class="hidden">
-      <div class="max-w-3xl mx-auto bg-white rounded-lg shadow p-6">
-        <div class="flex border-b border-gray-200 mb-4">
-          <button class="auth-tab px-4 py-2 -mb-px font-semibold border-b-2 border-indigo-600 text-indigo-600" onclick="switchAuthTab('login')">Login</button>
-          <button class="auth-tab px-4 py-2 -mb-px font-semibold text-gray-500" onclick="switchAuthTab('register')">Register</button>
-        </div>
-
-        <!-- LOGIN FORM -->
-        <div id="auth-login" class="auth-panel">
-          <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium">Email</label>
-              <input required type="email" id="loginEmail" placeholder="Enter your email" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
-            </div>
-            <div>
-              <div class="flex justify-between items-center">
-                <label class="block text-sm font-medium">Password</label>
-                <button type="button" onclick="openForgotPassword()" class="text-xs text-indigo-600 hover:underline">Forgot Password?</button>
-              </div>
-              <div class="relative mt-1">
-                <input required type="password" id="loginPassword" placeholder="Enter your password" class="w-full rounded border border-gray-200 bg-gray-50 p-2 pr-10" />
-                <button type="button" onclick="togglePasswordVisibility('loginPassword', 'loginEyeIcon')" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
-                  <i id="loginEyeIcon" class="fas fa-eye"></i>
-                </button>
-              </div>
-            </div>
-            <div class="flex items-center justify-between">
-              <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-semibold">Login</button>
-            </div>
-            <div id="loginMessage" class="text-sm text-red-500 font-medium"></div>
-          </form>
-        </div>
-
-        <!-- REGISTER FORM -->
-        <div id="auth-register" class="auth-panel hidden">
-          <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium">Full Name</label>
-              <input required type="text" id="regName" placeholder="Enter your full name" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium">Email</label>
-              <input required type="email" id="regEmail" placeholder="Enter your email" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium">Phone Number (with Country Code, e.g., +91...)</label>
-              <input required type="tel" id="regPhone" placeholder="+919876543210" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium">Password</label>
-              <div class="relative mt-1">
-                <input required type="password" id="regPassword" placeholder="Create a password" class="w-full rounded border border-gray-200 bg-gray-50 p-2 pr-10" />
-                <button type="button" onclick="togglePasswordVisibility('regPassword', 'regEyeIcon')" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
-                  <i id="regEyeIcon" class="fas fa-eye"></i>
-                </button>
-              </div>
-              <div class="mt-2 text-xs text-gray-500 bg-gray-50 p-2.5 rounded border border-gray-100 space-y-1">
-                <div class="font-semibold text-gray-700">Password Requirements:</div>
-                <ul id="passwordCriteria" class="list-disc pl-4 space-y-0.5">
-                  <li id="crit-length" class="text-rose-500">At least 8 characters long</li>
-                  <li id="crit-upper" class="text-rose-500">At least one uppercase letter (A-Z)</li>
-                  <li id="crit-lower" class="text-rose-500">At least one lowercase letter (a-z)</li>
-                  <li id="crit-number" class="text-rose-500">At least one number (0-9)</li>
-                  <li id="crit-special" class="text-rose-500">At least one wild/special character (e.g. @, #, $, !)</li>
-                </ul>
-              </div>
-            </div>
-            <div>
-              <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-semibold">Register Account</button>
-            </div>
-            <div id="registerMessage" class="text-sm text-red-500 font-medium"></div>
-          </form>
-        </div>
+      <div class="flex justify-center gap-3 pt-2">
+        <button onclick="window.print()" class="px-4 py-2 bg-indigo-600 text-white rounded text-xs font-semibold">Print Certificate</button>
+        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded text-xs font-semibold">Close</button>
       </div>
-    </section>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
 
-    <!-- ADMIN LOGIN VIEW -->
-    <section id="view-admin-login" class="hidden">
-      <div class="max-w-md mx-auto bg-white rounded-lg shadow p-6 space-y-4">
-        <div class="text-center pb-2 border-b border-gray-100">
-          <h2 class="text-xl font-bold">Admin Portal Authentication</h2>
-          <p class="text-xs text-gray-500 mt-0.5">Authorized personnel only</p>
+function loadAdminDashboard() {
+  renderAdminQuizzes();
+  renderAdminStudents();
+  renderAdminResults();
+  renderAnalytics();
+}
+
+function renderAdminQuizzes() {
+  const container = document.getElementById('adminQuizzes');
+  if (!container) return;
+  container.innerHTML = '';
+  appState.quizzes.forEach(q => {
+    const isPublished = q.isPublished !== false;
+    const div = document.createElement('div');
+    div.className = 'p-3 rounded border border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs';
+    div.innerHTML = `
+      <div>
+        <span class="font-semibold">${q.title}</span> • <span class="text-gray-400">${q.questions.length} questions • ${q.timeLimit || 15} mins</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="flex items-center gap-1 cursor-pointer select-none">
+          <span class="text-[11px] font-medium text-gray-600">Publish:</span>
+          <input type="checkbox" ${isPublished ? 'checked' : ''} onchange="togglePublishQuiz('${q.id}', this.checked)" class="rounded text-indigo-600 cursor-pointer" />
+        </label>
+        <button onclick="previewQuiz('${q.id}')" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded font-semibold hover:bg-emerald-200">Preview</button>
+        <button onclick="copyQuiz('${q.id}')" class="px-2 py-1 bg-indigo-100 text-indigo-700 rounded font-semibold hover:bg-indigo-200">Copy</button>
+        <button onclick="deleteQuiz('${q.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Delete</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function togglePublishQuiz(quizId, status) {
+  const quiz = appState.quizzes.find(q => q.id === quizId);
+  if (quiz) {
+    quiz.isPublished = status;
+    saveToStorage();
+  }
+}
+
+function previewQuiz(quizId) {
+  const quiz = appState.quizzes.find(q => q.id === quizId);
+  if (!quiz) return;
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto';
+  
+  let qListHtml = '';
+  quiz.questions.forEach((q, idx) => {
+    qListHtml += `
+      <div class="p-3 bg-gray-50 rounded border border-gray-200 space-y-1 text-left text-xs">
+        <div class="font-semibold text-gray-800">Q${idx + 1} (${q.type}): ${q.question}</div>
+        ${q.options && q.options.length ? `<div class="text-gray-600"><strong>Options:</strong> ${q.options.join(', ')}</div>` : ''}
+        <div class="text-emerald-700"><strong>Correct Answer:</strong> ${Array.isArray(q.correctAnswer) ? q.correctAnswer.join(', ') : (q.correctAnswer || 'Qualitative')}</div>
+      </div>
+    `;
+  });
+
+  modal.innerHTML = `
+    <div class="bg-white rounded-lg max-w-2xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto relative text-gray-900 shadow-2xl">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h2 class="text-lg font-bold">Quiz Preview: ${quiz.title}</h2>
+        <span class="text-xs text-gray-500">${quiz.questions.length} Questions • ${quiz.timeLimit || 15} mins</span>
+      </div>
+      <p class="text-xs text-gray-600">${quiz.description || ''}</p>
+      <div class="space-y-3">${qListHtml}</div>
+      <div class="text-center pt-2">
+        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-700 text-white rounded text-xs font-semibold">Close Preview</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function renderAdminStudents() {
+  const container = document.getElementById('adminStudents');
+  if (!container) return;
+  container.innerHTML = '';
+  appState.users.filter(u => u.role === 'student').forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'p-3 rounded border border-gray-200 flex justify-between items-center text-xs';
+    div.innerHTML = `<div><span class="font-semibold">${s.name}</span> (${s.email}${s.phone ? ' - ' + s.phone : ''})</div><button onclick="deleteStudent('${s.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Remove</button>`;
+    container.appendChild(div);
+  });
+}
+
+function renderAdminResults() {
+  const container = document.getElementById('adminResults');
+  if (!container) return;
+  container.innerHTML = '';
+  appState.results.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'p-3 rounded border border-gray-200 flex justify-between items-center text-xs';
+    div.innerHTML = `
+      <div><span class="font-semibold">${r.userName}</span> tested on <em>${r.quizTitle}</em> — <strong class="${r.passed ? 'text-emerald-600' : 'text-rose-600'}">${r.percentage}%</strong></div>
+      <div class="flex gap-2">
+        <button onclick="reviewSubmission('${r.id}')" class="px-2 py-1 bg-indigo-600 text-white rounded font-semibold">Review</button>
+        <button onclick="deleteResult('${r.id}')" class="px-2 py-1 bg-rose-600 text-white rounded font-semibold">Delete</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function renderAnalytics() {
+  const canvas = document.getElementById('gradesChart');
+  if (!canvas) return;
+  const passedCount = appState.results.filter(r => r.passed).length;
+  const failedCount = appState.results.filter(r => !r.passed).length;
+  if (window.myChartInstance) window.myChartInstance.destroy();
+  window.myChartInstance = new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Passed', 'Failed'],
+      datasets: [{ data: [passedCount, failedCount], backgroundColor: ['#10b981', '#f43f5e'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+}
+
+function openCreateQuizModal() {
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto';
+  modal.innerHTML = `
+    <div class="bg-white rounded-lg max-w-xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto relative text-gray-900 shadow-2xl">
+      <h2 class="text-xl font-bold border-b pb-2">Create New Quiz Module</h2>
+      
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold">Quiz Title</label>
+          <input type="text" id="newQuizTitle" placeholder="e.g., Advanced Data Analytics" class="w-full mt-1 p-2 border rounded bg-gray-50" />
         </div>
-        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" class="space-y-4">
+        <div>
+          <label class="block font-semibold">Description</label>
+          <input type="text" id="newQuizDesc" placeholder="Brief summary of the module" class="w-full mt-1 p-2 border rounded bg-gray-50" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block text-sm font-medium">Admin Email</label>
-            <input required type="email" id="adminLoginEmail" placeholder="Enter admin email" class="w-full mt-1 rounded border border-gray-200 bg-gray-50 p-2" />
+            <label class="block font-semibold">Timer (Minutes)</label>
+            <input type="number" id="newQuizTimer" value="15" class="w-full mt-1 p-2 border rounded bg-gray-50" />
           </div>
           <div>
-            <label class="block text-sm font-medium">Password</label>
-            <div class="relative mt-1">
-              <input required type="password" id="adminLoginPassword" placeholder="Enter admin password" class="w-full rounded border border-gray-200 bg-gray-50 p-2 pr-10" />
-              <button type="button" onclick="togglePasswordVisibility('adminLoginPassword', 'adminEyeIcon')" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
-                <i id="adminEyeIcon" class="fas fa-eye"></i>
-              </button>
+            <label class="block font-semibold">Pass Percentage (%)</label>
+            <input type="number" id="newQuizPass" value="60" class="w-full mt-1 p-2 border rounded bg-gray-50" />
+          </div>
+        </div>
+
+        <div class="pt-2 border-t">
+          <label class="block font-semibold mb-1">Upload Document (PDF / Word) to Import Questions</label>
+          <input type="file" id="quizDocFile" accept=".pdf,.doc,.docx,.txt" onchange="simulateDocUpload(event)" class="w-full p-2 border rounded bg-gray-50" />
+          <div id="docUploadStatus" class="text-[11px] text-emerald-600 mt-1 font-semibold"></div>
+        </div>
+
+        <div class="pt-2 border-t space-y-2">
+          <div class="font-semibold text-sm">Add Question Manually</div>
+          <div>
+            <label class="block font-medium">Question Text</label>
+            <input type="text" id="manualQText" placeholder="Enter question..." class="w-full mt-1 p-2 border rounded bg-gray-50" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-medium">Question Type</label>
+              <select id="manualQType" onchange="toggleQTypeOptions(this.value)" class="w-full mt-1 p-2 border rounded bg-gray-50">
+                <option value="mcq">MCQ (Single Answer)</option>
+                <option value="multi">Multiple Answers (Checkboxes)</option>
+                <option value="short">Short Answer</option>
+                <option value="long">Long Answer</option>
+                <option value="file">File Upload</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium">Marks</label>
+              <input type="number" id="manualQMarks" value="1" class="w-full mt-1 p-2 border rounded bg-gray-50" />
             </div>
           </div>
+          
+          <div id="optionsContainer">
+            <label class="block font-medium">Options (Comma separated for MCQ/Multi)</label>
+            <input type="text" id="manualQOptions" placeholder="Option A, Option B, Option C, Option D" class="w-full mt-1 p-2 border rounded bg-gray-50" />
+          </div>
+
           <div>
-            <button type="submit" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-semibold">Admin Login</button>
+            <label class="block font-medium">Correct Answer</label>
+            <input type="text" id="manualQCorrect" placeholder="Exact matching correct answer" class="w-full mt-1 p-2 border rounded bg-gray-50" />
           </div>
-          <div id="adminLoginMessage" class="text-sm text-red-500 font-medium text-center"></div>
-        </form>
-      </div>
-    </section>
 
-    <!-- DASHBOARD (STUDENT) -->
-    <section id="view-dashboard" class="hidden">
-      <div class="max-w-4xl mx-auto space-y-4">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-4 rounded-lg shadow">
-          <h2 class="text-xl font-semibold">Assigned Quizzes</h2>
-          <div class="flex items-center gap-2 w-full sm:w-auto">
-            <input id="quizSearch" oninput="filterQuizzes()" placeholder="Search quizzes..." class="p-2 rounded border border-gray-200 bg-gray-50 text-sm flex-1 sm:w-60" />
-            <button onclick="navigateTo('history')" class="px-3 py-2 bg-gray-100 rounded text-sm font-semibold hover:bg-gray-200">History</button>
-          </div>
+          <button type="button" onclick="addManualQuestionToBuffer()" class="w-full py-1.5 bg-gray-800 text-white rounded font-semibold hover:bg-gray-700">+ Add Question to Buffer</button>
         </div>
 
-        <div class="flex items-center justify-between bg-white p-4 rounded-lg shadow">
-          <div>
-            <div class="text-xs text-gray-500">Signed in as</div>
-            <div id="userDisplay" class="font-semibold text-sm">Guest User</div>
-          </div>
-          <button onclick="logout()" class="px-3 py-1.5 bg-rose-50 text-rose-600 text-xs font-semibold rounded hover:bg-rose-100">Logout</button>
-        </div>
-
-        <div id="quizzesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
-      </div>
-    </section>
-
-    <!-- QUIZ RUNNER -->
-    <section id="view-quiz" class="hidden">
-      <div class="max-w-2xl mx-auto bg-white rounded-lg p-6 shadow space-y-6">
-        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
-          <div>
-            <h2 id="quizTitle" class="text-xl font-semibold">Quiz Title</h2>
-            <div id="quizMeta" class="text-xs text-gray-500 mt-0.5">Timer: <span id="quizTimer" class="font-mono font-bold text-rose-500">15:00</span></div>
-          </div>
-          <button onclick="exitQuiz()" class="px-3 py-1.5 bg-gray-100 rounded text-xs font-semibold">Exit</button>
-        </div>
-
-        <form id="quizForm" class="space-y-4 min-h-[200px]"></form>
-
-        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-          <div id="questionProgress" class="text-xs text-gray-500 font-medium">Question 1 / 1</div>
-          <div class="flex gap-2">
-            <button id="prevQ" onclick="previousQuestion()" class="px-3 py-1.5 bg-gray-100 rounded text-xs font-semibold">Previous</button>
-            <button id="nextQ" onclick="nextQuestion()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold">Next</button>
-            <button id="submitQuiz" onclick="submitQuiz()" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold">Submit Quiz</button>
-          </div>
+        <div class="pt-2 border-t">
+          <div class="font-semibold">Buffered Questions (<span id="bufferedCount">0</span>)</div>
+          <div id="bufferedList" class="space-y-1 max-h-32 overflow-y-auto mt-1 text-[11px] text-gray-600"></div>
         </div>
       </div>
-    </section>
 
-    <!-- HISTORY & CERTIFICATES -->
-    <section id="view-history" class="hidden">
-      <div class="max-w-3xl mx-auto bg-white rounded-lg p-6 shadow space-y-4">
-        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
-          <h2 class="text-xl font-semibold">Your Results & Certificates</h2>
-          <button onclick="navigateTo('dashboard')" class="px-3 py-1.5 bg-indigo-600 text-white rounded text-xs font-semibold">Back to Dashboard</button>
-        </div>
-        <div id="resultsList" class="space-y-3"></div>
+      <div class="flex justify-end gap-2 pt-2 border-t">
+        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded font-semibold">Cancel</button>
+        <button onclick="saveNewQuizToSystem()" class="px-4 py-2 bg-indigo-600 text-white rounded font-semibold">Save & Publish Quiz</button>
       </div>
-    </section>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  window.tempBufferedQuestions = [];
+}
 
-    <!-- ADMIN DASHBOARD -->
-    <section id="view-admin" class="hidden">
-      <div class="space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-lg shadow">
-          <h2 class="text-2xl font-semibold">Admin Command Center</h2>
-          <div class="flex items-center gap-2">
-            <button onclick="openCreateQuizModal()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold">+ Create Quiz</button>
-            <button onclick="document.getElementById('bulkFile').click()" class="px-3 py-2 bg-gray-100 rounded text-xs font-semibold">Bulk Student Import</button>
-            <input id="bulkFile" type="file" accept=".csv" class="hidden" onchange="handleBulkImport(event)" />
-            <button onclick="logout()" class="px-3 py-2 bg-rose-50 text-rose-600 rounded text-xs font-semibold hover:bg-rose-100">Logout</button>
-          </div>
-        </div>
+function toggleQTypeOptions(type) {
+  const container = document.getElementById('optionsContainer');
+  if (['short', 'long', 'file'].includes(type)) {
+    container.style.display = 'none';
+  } else {
+    container.style.display = 'block';
+  }
+}
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="col-span-2 bg-white rounded-lg p-4 shadow space-y-3">
-            <h3 class="font-semibold text-sm">Active Quizzes</h3>
-            <div id="adminQuizzes" class="space-y-2"></div>
-          </div>
+function simulateDocUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('docUploadStatus').textContent = `Parsed file "${file.name}" successfully! 2 sample questions auto-imported.`;
+  
+  window.tempBufferedQuestions = window.tempBufferedQuestions || [];
+  window.tempBufferedQuestions.push({
+    id: 'q_' + Date.now() + '_1',
+    type: 'mcq',
+    question: `[Imported from ${file.name}] What is the key focus of this training module?`,
+    options: ['Quality Assurance', 'Speed reduction', 'Skipping steps', 'None'],
+    correctAnswer: 'Quality Assurance',
+    marks: 1
+  });
+  window.tempBufferedQuestions.push({
+    id: 'q_' + Date.now() + '_2',
+    type: 'short',
+    question: `[Imported from ${file.name}] State one core takeaway in your own words.`,
+    options: [],
+    correctAnswer: '',
+    marks: 1
+  });
+  document.getElementById('bufferedCount').textContent = window.tempBufferedQuestions.length;
+  renderBufferedList();
+}
 
-          <aside class="bg-white rounded-lg p-4 shadow space-y-3 text-center">
-            <h3 class="font-semibold text-sm text-left">Cohort Pass Analytics</h3>
-            <div class="chart-container" style="position: relative; height: 220px; max-width: 260px; margin: 0 auto;">
-              <canvas id="gradesChart"></canvas>
-            </div>
-            <button onclick="sendReminderEmails()" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white rounded text-xs font-semibold">Send Reminder Emails</button>
-          </aside>
-        </div>
+function addManualQuestionToBuffer() {
+  const question = document.getElementById('manualQText').value.trim();
+  const type = document.getElementById('manualQType').value;
+  const marks = parseInt(document.getElementById('manualQMarks').value) || 1;
+  const optionsRaw = document.getElementById('manualQOptions').value;
+  const correctAnswer = document.getElementById('manualQCorrect').value.trim();
 
-        <div class="bg-white rounded-lg p-4 shadow space-y-3">
-          <h3 class="font-semibold text-sm">Registered Students</h3>
-          <div id="adminStudents" class="space-y-2"></div>
-        </div>
+  if (!question) {
+    alert('Please enter question text.');
+    return;
+  }
 
-        <div class="bg-white rounded-lg p-4 shadow space-y-3">
-          <h3 class="font-semibold text-sm">Student Submissions & Grades</h3>
-          <div id="adminResults" class="space-y-2"></div>
-        </div>
-      </div>
-    </section>
+  let options = [];
+  if (!['short', 'long', 'file'].includes(type)) {
+    options = optionsRaw.split(',').map(o => o.trim()).filter(Boolean);
+  }
 
-  </main>
+  window.tempBufferedQuestions = window.tempBufferedQuestions || [];
+  window.tempBufferedQuestions.push({
+    id: 'q_' + Date.now(),
+    type,
+    question,
+    options,
+    correctAnswer,
+    marks
+  });
 
-  <!-- Inline Helper Scripts -->
-  <script>
-    function togglePasswordVisibility(inputId, iconId) {
-      const input = document.getElementById(inputId);
-      const icon = document.getElementById(iconId);
-      if (input.type === 'password') {
-        input.type = 'text';
-        icon.className = 'fas fa-eye-slash';
-      } else {
-        input.type = 'password';
-        icon.className = 'fas fa-eye';
-      }
-    }
+  document.getElementById('manualQText').value = '';
+  document.getElementById('manualQOptions').value = '';
+  document.getElementById('manualQCorrect').value = '';
+  document.getElementById('bufferedCount').textContent = window.tempBufferedQuestions.length;
+  renderBufferedList();
+}
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const regPassInput = document.getElementById('regPassword');
-      if (regPassInput) {
-        regPassInput.addEventListener('input', (e) => {
-          const val = e.target.value;
-          updateCriterion('crit-length', val.length >= 8);
-          updateCriterion('crit-upper', /[A-Z]/.test(val));
-          updateCriterion('crit-lower', /[a-z]/.test(val));
-          updateCriterion('crit-number', /[0-9]/.test(val));
-          updateCriterion('crit-special', /[^A-Za-z0-9]/.test(val));
-        });
-      }
+function renderBufferedList() {
+  const list = document.getElementById('bufferedList');
+  if (!list) return;
+  list.innerHTML = '';
+  window.tempBufferedQuestions.forEach((q, idx) => {
+    const div = document.createElement('div');
+    div.className = 'p-1.5 bg-gray-100 rounded flex justify-between items-center';
+    div.innerHTML = `<span>${idx + 1}. (${q.type}) ${q.question}</span>`;
+    list.appendChild(div);
+  });
+}
+
+function saveNewQuizToSystem() {
+  const title = document.getElementById('newQuizTitle').value.trim();
+  const description = document.getElementById('newQuizDesc').value.trim();
+  const timeLimit = parseInt(document.getElementById('newQuizTimer').value) || 15;
+  const passPercentage = parseInt(document.getElementById('newQuizPass').value) || 60;
+
+  if (!title) {
+    alert('Please enter a quiz title.');
+    return;
+  }
+  if (!window.tempBufferedQuestions || window.tempBufferedQuestions.length === 0) {
+    alert('Please add at least one question to the quiz.');
+    return;
+  }
+
+  const newQuiz = {
+    id: 'quiz_' + Date.now(),
+    title,
+    description: description || 'Custom training module.',
+    passPercentage,
+    timeLimit,
+    isPublished: true,
+    questions: window.tempBufferedQuestions
+  };
+
+  appState.quizzes.push(newQuiz);
+  saveToStorage();
+  document.querySelector('.fixed').remove();
+  loadAdminDashboard();
+  alert('Quiz successfully created and published!');
+}
+
+function copyQuiz(quizId) {
+  const quiz = appState.quizzes.find(q => q.id === quizId);
+  if (!quiz) return;
+  const copiedQuiz = {
+    ...quiz,
+    id: 'quiz_' + Date.now(),
+    title: `${quiz.title} (Copy)`
+  };
+  appState.quizzes.push(copiedQuiz);
+  saveToStorage();
+  loadAdminDashboard();
+  alert('Quiz duplicated successfully!');
+}
+
+function deleteQuiz(id) {
+  appState.quizzes = appState.quizzes.filter(q => q.id !== id);
+  saveToStorage();
+  loadAdminDashboard();
+}
+
+function deleteStudent(id) {
+  appState.users = appState.users.filter(u => u.id !== id);
+  saveToStorage();
+  loadAdminDashboard();
+}
+
+function deleteResult(id) {
+  appState.results = appState.results.filter(r => r.id !== id);
+  saveToStorage();
+  loadAdminDashboard();
+}
+
+function handleBulkImport(e) {
+  alert('Simulated CSV bulk student import successful!');
+}
+
+function sendReminderEmails() {
+  alert('Reminder emails successfully dispatched to students with pending modules.');
+}
+
+function saveToStorage() {
+  localStorage.setItem('nivnish_appState', JSON.stringify(appState));
+}
+
+function loadFromStorage() {
+  const data = localStorage.getItem('nivnish_appState');
+  if (data) {
+    try { appState = { ...appState, ...JSON.parse(data) }; } catch (err) {}
+  }
+}
+
+function loadSampleData() {
+  if (appState.users.length === 0) {
+    appState.users.push(
+      { id: 'usr_admin', name: 'Admin User', email: 'admin@nivnish.com', phone: '+919876543210', password: 'Admin@123', role: 'admin' },
+      { id: 'usr_demo', name: 'Demo Student', email: 'student@demo.com', phone: '+919123456789', password: 'Student@123', role: 'student' }
+    );
+  }
+  if (appState.quizzes.length === 0) {
+    appState.quizzes.push({
+      id: 'quiz_01',
+      title: 'JavaScript & Systems Fundamentals',
+      description: 'Core programming concepts, ES6 execution models, and state handling.',
+      passPercentage: 60,
+      timeLimit: 15,
+      isPublished: true,
+      questions: [
+        { id: 'q_0', type: 'mcq', question: 'Which keyword defines a constant variable in JavaScript?', options: ['var', 'let', 'const', 'static'], correctAnswer: 'const', marks: 1 },
+        { id: 'q_1', type: 'short', question: 'What does DOM stand for?', options: [], correctAnswer: 'Document Object Model', marks: 1 }
+      ]
     });
-
-    function updateCriterion(elemId, isValid) {
-      const el = document.getElementById(elemId);
-      if (!el) return;
-      if (isValid) {
-        el.className = 'text-emerald-600 font-medium';
-        if (!el.textContent.includes('✓')) el.textContent += ' ✓';
-      } else {
-        el.className = 'text-rose-500';
-        el.textContent = el.textContent.replace(' ✓', '');
-      }
-    }
-  </script>
-
-  <!-- External App Script -->
-  <script src="app.js"></script>
-</body>
-</html>
+  }
+  saveToStorage();
+}
